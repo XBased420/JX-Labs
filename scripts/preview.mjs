@@ -7,7 +7,7 @@ import settings, { deployment } from '../site.config.mjs';
 import { renderPage } from '../src/render.mjs';
 const root = fileURLToPath(new URL('../public/', import.meta.url));
 const location = deployment(settings);
-const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.webp': 'image/webp' };
+const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.woff2': 'font/woff2', '.webp': 'image/webp' };
 const server = http.createServer(async (req, res) => {
   try {
     const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);

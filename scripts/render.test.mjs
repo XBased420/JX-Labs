@@ -85,9 +85,17 @@ test('concept lab keeps three interactive industry sites inside the terminal', (
   assert.match(html, /Common Thread Supply/);
   assert.match(html, /id="concept-frame"/);
   assert.match(html, /Build something like this/);
+  assert.equal((html.match(/data-restaurant-page=/g) || []).length, 4);
+  for (const page of ['home', 'menu', 'reserve', 'story']) assert.match(html, new RegExp(`data-restaurant-route="${page}"`));
+  assert.match(html, /id="restaurant-hold-table"/);
+  assert.match(html, /no reservation was sent and no personal information was collected/i);
+  assert.doesNotMatch(html, /<form[^>]+restaurant/i);
   assert.match(behavior, /const openConcept/);
+  assert.match(behavior, /const showRestaurantPage/);
+  assert.match(behavior, /restaurantParty = Math\.max\(1, Math\.min\(8/);
+  assert.match(behavior, /Demo table held\. No reservation or personal information was sent/);
   assert.match(behavior, /activateView\('booking'\)/);
-  for (const name of ['ember-vine', 'nightshift-audio', 'common-thread-supply']) {
+  for (const name of ['ember-vine', 'ember-vine-interior-v2', 'ember-vine-dish-v2', 'nightshift-audio', 'common-thread-supply']) {
     assert.equal(readFileSync(new URL(`../public/assets/concepts/${name}.jpg`, import.meta.url)).subarray(0, 2).toString('hex'), 'ffd8');
   }
 });

@@ -69,26 +69,71 @@ export function renderConceptLab(asset) {
 
 function renderRestaurant(asset) {
   const menu = [
-    ['dinner', 'Coal-roasted carrots', 'Labneh, pistachio, smoked honey', '$13'],
-    ['dinner', 'Ember chicken', 'Charred lemon, warm herbs, pan jus', '$28'],
-    ['dinner', 'River trout', 'Brown butter, caper, market greens', '$31'],
-    ['drinks', 'Vine spritz', 'Pear, rosemary, sparkling wine', '$12'],
-    ['drinks', 'Copper old fashioned', 'Rye, burnt orange, walnut', '$15'],
-    ['drinks', 'Zero-proof garden', 'Cucumber, mint, tonic', '$9']
+    ['snacks', 'Hearth bread', 'Cultured butter, smoked salt', '$8', 'V'],
+    ['snacks', 'Crispy squash blossoms', 'Goat cheese, sungold tomato', '$14', 'V'],
+    ['snacks', 'Coal-kissed oysters', 'Charred jalapeño mignonette', '$18', 'GF'],
+    ['fire', 'Ember-roasted carrots', 'Smoked labneh, pistachio, citrus', '$15', 'V GF'],
+    ['fire', 'Half chicken', 'Charred lemon, warm herbs, pan jus', '$29', 'GF'],
+    ['fire', 'Gulf redfish', 'Brown butter, caper, market greens', '$34', 'GF'],
+    ['fire', '44 Farms bavette', 'Black garlic, embered onion, jus', '$39', 'GF'],
+    ['garden', 'Little gem', 'Green goddess, radish, rye crumb', '$13', 'V'],
+    ['garden', 'Beets from the coals', 'Blackberry, pecan, sheep’s milk', '$14', 'V GF'],
+    ['garden', 'Woodland mushrooms', 'Soft polenta, sherry, parmesan', '$16', 'V GF'],
+    ['sweet', 'Burnt honey panna cotta', 'Pear, rosemary sugar', '$11', 'GF'],
+    ['sweet', 'Dark chocolate torte', 'Olive oil, sea salt, cocoa nib', '$12', 'V'],
+    ['drinks', 'Vine spritz', 'Pear, rosemary, sparkling wine', '$13', ''],
+    ['drinks', 'Copper old fashioned', 'Rye, burnt orange, walnut', '$16', ''],
+    ['drinks', 'Zero-proof garden', 'Cucumber, mint, tonic', '$10', 'NA']
   ];
   return `<article class="concept-demo restaurant-demo" data-concept-demo="restaurant" hidden>
-    <header class="restaurant-nav"><strong>Ember <i>&amp;</i> Vine</strong><div><button type="button" data-concept-scroll="restaurant-menu">Menu</button><button type="button" data-concept-scroll="restaurant-story">Our table</button><button type="button" class="restaurant-reserve" data-demo-message="Reservation request opened — demonstration only.">Reserve</button></div></header>
-    <section class="restaurant-hero">
-      <div class="restaurant-hero-copy"><p>Seasonal cooking in Oak Cliff</p><h2>Dinner should feel like a place you found.</h2><span>Fire-led plates, a short wine list, and a room built for staying awhile.</span><button type="button" data-concept-scroll="restaurant-menu">Explore tonight’s menu</button></div>
-      <figure><img src="${asset('assets/concepts/ember-vine.jpg')}" alt="A candlelit table with ember-roasted food" width="1600" height="1000"><figcaption>DINNER / TUE–SUN / 5–11</figcaption></figure>
-    </section>
-    <section class="restaurant-menu" id="restaurant-menu">
-      <div><p>From the kitchen</p><h3>A changing menu,<br>grounded in fire.</h3></div>
-      <div><div class="restaurant-filters" role="group" aria-label="Menu category"><button type="button" class="active" data-menu-filter="all" aria-pressed="true">Everything</button><button type="button" data-menu-filter="dinner" aria-pressed="false">Dinner</button><button type="button" data-menu-filter="drinks" aria-pressed="false">Drinks</button></div>
-      <ul>${menu.map(([category, name, description, price]) => `<li data-menu-item="${category}"><div><strong>${name}</strong><span>${description}</span></div><b>${price}</b></li>`).join('')}</ul></div>
-    </section>
-    <section class="restaurant-story" id="restaurant-story"><blockquote>“Come for dinner. Leave with a new favorite table.”</blockquote><div><h3>Made for the neighborhood.</h3><p>Ember &amp; Vine is a fictional restaurant concept designed around the decisions diners make first: what the food feels like, when the doors are open, and how quickly they can reserve a table.</p><dl><div><dt>Hours</dt><dd>Tue–Thu 5–10<br>Fri–Sun 5–11</dd></div><div><dt>Find us</dt><dd>Bishop Arts<br>Dallas, Texas</dd></div></dl></div></section>
-    <footer class="restaurant-footer"><strong>Ember &amp; Vine</strong><button type="button" data-demo-message="Table request received — demonstration only.">Find a table</button></footer>
+    <header class="restaurant-nav">
+      <button type="button" class="restaurant-wordmark" data-restaurant-route="home" aria-label="Ember and Vine home">Ember <i>&amp;</i> Vine</button>
+      <nav aria-label="Ember and Vine pages"><button type="button" data-restaurant-route="menu">Menu</button><button type="button" data-restaurant-route="story">Our table</button><button type="button" class="restaurant-reserve" data-restaurant-route="reserve">Find a table</button></nav>
+    </header>
+
+    <main class="restaurant-pages">
+      <section class="restaurant-page restaurant-home" data-restaurant-page="home">
+        <div class="restaurant-hero">
+          <div class="restaurant-hero-copy"><p>Seasonal cooking in Oak Cliff</p><h2>Dinner should feel like a place you found.</h2><span>Fire-led plates, a thoughtful wine list, and a room built for staying awhile.</span><div><button type="button" class="restaurant-primary" data-restaurant-route="reserve">Reserve a table</button><button type="button" data-restaurant-route="menu">Explore tonight’s menu</button></div></div>
+          <figure><img src="${asset('assets/concepts/ember-vine-interior-v2.jpg')}" alt="A warmly lit dining room with olive banquettes and an open hearth" width="1586" height="992"><figcaption>DINNER / TUE–SUN / 5–11</figcaption></figure>
+        </div>
+        <div class="restaurant-marquee" aria-label="Restaurant highlights"><div><span>OPEN HEARTH</span><i>◆</i><span>TEXAS GROWN</span><i>◆</i><span>WINE FOR THE TABLE</span><i>◆</i><span>BISHOP ARTS</span><i>◆</i><span>OPEN HEARTH</span><i>◆</i><span>TEXAS GROWN</span><i>◆</i></div></div>
+        <section class="restaurant-signatures">
+          <header><p>Tonight at Ember</p><h3>Start with the fire.</h3><button type="button" data-restaurant-route="menu">View full menu <span>↗</span></button></header>
+          <figure class="restaurant-dish"><img src="${asset('assets/concepts/ember-vine-dish-v2.jpg')}" alt="Ember-roasted carrots over smoked labneh" width="1448" height="1086"><figcaption><span>01 / From the coals</span><strong>Ember-roasted carrots</strong><small>Smoked labneh, pistachio, charred citrus</small></figcaption></figure>
+          <div class="restaurant-tonight"><article><span>02</span><h4>Gulf redfish</h4><p>Brown butter, caper, market greens</p><b>$34</b></article><article><span>03</span><h4>44 Farms bavette</h4><p>Black garlic, embered onion, jus</p><b>$39</b></article></div>
+        </section>
+        <section class="restaurant-gather"><div><p>Private tables</p><h3>Bring the people.<br>We’ll tend the fire.</h3><span>Our hearth room hosts seated dinners for up to 28, with family-style menus shaped around the season.</span><button type="button" data-restaurant-route="story">Explore private dining</button></div></section>
+      </section>
+
+      <section class="restaurant-page restaurant-menu" data-restaurant-page="menu" hidden>
+        <header class="restaurant-page-intro"><div><p>From the kitchen</p><h2>A changing menu,<br>grounded in fire.</h2></div><p>Our menu follows what is growing nearby and what belongs over flame. Ask your server about tonight’s market plates.</p></header>
+        <div class="restaurant-menu-layout"><aside><p>Dinner menu</p><div class="restaurant-filters" role="group" aria-label="Menu category"><button type="button" class="active" data-menu-filter="all" aria-pressed="true">All</button><button type="button" data-menu-filter="snacks" aria-pressed="false">To begin</button><button type="button" data-menu-filter="fire" aria-pressed="false">From the fire</button><button type="button" data-menu-filter="garden" aria-pressed="false">Field &amp; garden</button><button type="button" data-menu-filter="sweet" aria-pressed="false">Sweet</button><button type="button" data-menu-filter="drinks" aria-pressed="false">Drinks</button></div><small>V — Vegetarian<br>GF — Gluten friendly<br>NA — No alcohol</small></aside>
+          <div class="restaurant-menu-list"><ul>${menu.map(([category, name, description, price, note]) => `<li data-menu-item="${category}"><div><strong>${name}</strong><span>${description}</span></div><small>${note}</small><b>${price}</b></li>`).join('')}</ul><p>Menu and prices are part of this fictional concept and may change with the imaginary harvest.</p></div>
+        </div>
+        <section class="restaurant-menu-callout"><img src="${asset('assets/concepts/ember-vine-dish-v2.jpg')}" alt="A seasonal dish prepared over fire" width="1448" height="1086" loading="lazy"><div><p>Leave room for one more</p><h3>Let us cook for the table.</h3><span>A four-course, family-style menu is available nightly for the whole table.</span><b>$68 per guest</b><button type="button" data-restaurant-route="reserve">Book dinner</button></div></section>
+      </section>
+
+      <section class="restaurant-page restaurant-booking" data-restaurant-page="reserve" hidden>
+        <header class="restaurant-page-intro"><div><p>Reservations</p><h2>Your table<br>is waiting.</h2></div><p>Choose a date, party size, and time. This interactive example stops before collecting any personal information.</p></header>
+        <div class="restaurant-reservation-shell">
+          <div class="restaurant-reservation-controls">
+            <fieldset><legend>1 / Choose a night</legend><div class="restaurant-date-options">${[0,1,2,3].map((offset, index) => `<button type="button" data-restaurant-date-offset="${offset}" aria-pressed="${index === 0}"><small>${index === 0 ? 'Tonight' : 'Upcoming'}</small><strong>Loading</strong></button>`).join('')}</div></fieldset>
+            <fieldset><legend>2 / Party size</legend><div class="restaurant-party-stepper"><button type="button" data-restaurant-party="minus" aria-label="Remove one guest">−</button><output id="restaurant-party-count" aria-live="polite">2 guests</output><button type="button" data-restaurant-party="plus" aria-label="Add one guest">+</button></div><small>For groups of 7 or more, please inquire about our hearth room.</small></fieldset>
+            <fieldset><legend>3 / Available times</legend><div class="restaurant-time-options">${['5:00 PM','5:30 PM','6:15 PM','7:45 PM','8:30 PM','9:15 PM'].map((time,index) => `<button type="button" data-restaurant-time="${time}" aria-pressed="${index === 2}">${time}</button>`).join('')}</div></fieldset>
+          </div>
+          <aside class="restaurant-reservation-summary"><p>Your evening</p><h3 id="restaurant-reservation-date">Tonight</h3><dl><div><dt>Guests</dt><dd id="restaurant-reservation-guests">2 guests</dd></div><div><dt>Time</dt><dd id="restaurant-reservation-time">6:15 PM</dd></div><div><dt>Location</dt><dd>Ember &amp; Vine<br>Bishop Arts, Dallas</dd></div></dl><button type="button" id="restaurant-hold-table">Hold this table</button><small>No payment is taken when you reserve.</small><div class="restaurant-confirmation" id="restaurant-confirmation" role="status" aria-live="polite" hidden><strong>Table held—for the demo.</strong><span>This is a concept experience, so no reservation was sent and no personal information was collected.</span></div></aside>
+        </div>
+        <section class="restaurant-booking-note"><span>◆</span><p>Running late? Celebrating something? A real reservation flow can collect notes after a table is selected—without slowing down the first decision.</p></section>
+      </section>
+
+      <section class="restaurant-page restaurant-story" data-restaurant-page="story" hidden>
+        <section class="restaurant-story-hero"><figure><img src="${asset('assets/concepts/ember-vine-interior-v2.jpg')}" alt="Ember and Vine’s candlelit hearth room" width="1586" height="992"><figcaption>THE HEARTH ROOM / BISHOP ARTS</figcaption></figure><div><p>Our table</p><h2>A neighborhood room, lit by fire.</h2><span>Ember &amp; Vine began with a simple idea: good cooking should carry the warmth of the people and place behind it.</span></div></section>
+        <section class="restaurant-story-body"><blockquote>“Come for dinner. Leave with a new favorite table.”</blockquote><div><p>The menu is rooted in North Texas seasons, small farms, and the kind of food that gets better when it is passed around. Our open hearth does the heavy lifting; smoke, flame, and patience do the rest.</p><p>The room is polished but never precious. Come in from the neighborhood, order one more plate, and stay until the candles burn low.</p><dl><div><dt>Hours</dt><dd>Tue–Thu 5–10<br>Fri–Sun 5–11</dd></div><div><dt>Find us</dt><dd>408 W. Eighth Street<br>Dallas, Texas</dd></div><div><dt>Hospitality</dt><dd>Walk-ins welcome<br>Reservations encouraged</dd></div></dl></div></section>
+        <section class="restaurant-private"><p>Gather at the hearth</p><h3>Private dinners,<br>without the private-room feeling.</h3><span>Host 12–28 guests around a shared table with a seasonal menu, dedicated service, and a view of the open fire.</span><button type="button" data-demo-message="Private dining inquiry opened — demonstration only.">Inquire about your date</button></section>
+      </section>
+    </main>
+    <footer class="restaurant-footer"><button type="button" class="restaurant-wordmark" data-restaurant-route="home">Ember <i>&amp;</i> Vine</button><div><button type="button" data-restaurant-route="menu">Menu</button><button type="button" data-restaurant-route="story">Our table</button><button type="button" data-restaurant-route="reserve">Reservations</button></div><span>Bishop Arts / Dallas, Texas</span></footer>
   </article>`;
 }
 

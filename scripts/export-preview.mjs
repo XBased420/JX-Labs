@@ -11,7 +11,7 @@ for (const name of ['manrope', 'space-grotesk']) {
 const js = await readFile(publicFile('site.js'), 'utf8');
 const favicon = await readFile(publicFile('favicon.svg'));
 let html = renderPage({ settings: { ...settings, endpoint: '', analyticsToken: '', launchReady: false }, site: 'https://xbased420.github.io', base: '/' });
-for (const name of ['ember-vine', 'nightshift-audio', 'common-thread-supply']) {
+for (const name of ['ember-vine', 'ember-vine-interior-v2', 'ember-vine-dish-v2', 'nightshift-audio', 'common-thread-supply']) {
   const image = await readFile(publicFile(`assets/concepts/${name}.jpg`));
   html = html.replaceAll(`src="/assets/concepts/${name}.jpg"`, `src="data:image/jpeg;base64,${image.toString('base64')}"`);
 }

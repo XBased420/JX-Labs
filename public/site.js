@@ -205,6 +205,46 @@
   const conceptData = JSON.parse(document.getElementById('concept-config')?.textContent || '[]');
   let activeConcept = null;
   let conceptToastTimer;
+  let restaurantParty = 2;
+  let restaurantSelectedDate = 'Tonight';
+  let restaurantSelectedTime = '6:15 PM';
+
+  const restaurantDateButtons = [...document.querySelectorAll('[data-restaurant-date-offset]')];
+  restaurantDateButtons.forEach(button => {
+    const offset = Number(button.dataset.restaurantDateOffset);
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    const day = offset === 0 ? 'Tonight' : new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date);
+    const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+    button.dataset.restaurantDate = `${day}, ${shortDate}`;
+    button.querySelector('small').textContent = day;
+    button.querySelector('strong').textContent = shortDate;
+  });
+
+  const updateRestaurantReservation = () => {
+    const guestLabel = `${restaurantParty} ${restaurantParty === 1 ? 'guest' : 'guests'}`;
+    document.getElementById('restaurant-party-count').textContent = guestLabel;
+    document.getElementById('restaurant-reservation-guests').textContent = guestLabel;
+    document.getElementById('restaurant-reservation-date').textContent = restaurantSelectedDate;
+    document.getElementById('restaurant-reservation-time').textContent = restaurantSelectedTime;
+    document.getElementById('restaurant-confirmation').hidden = true;
+  };
+  const showRestaurantPage = (page, { focus = false } = {}) => {
+    const selectedPage = document.querySelector(`[data-restaurant-page="${page}"]`);
+    if (!selectedPage) return;
+    document.querySelectorAll('[data-restaurant-page]').forEach(section => {
+      section.hidden = section !== selectedPage;
+      section.classList.remove('is-entering');
+    });
+    document.querySelectorAll('[data-restaurant-route]').forEach(button => {
+      const current = button.dataset.restaurantRoute === page;
+      button.classList.toggle('active', current);
+      if (!button.classList.contains('restaurant-wordmark')) button.setAttribute('aria-current', current ? 'page' : 'false');
+    });
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    window.requestAnimationFrame(() => selectedPage.classList.add('is-entering'));
+    if (focus) selectedPage.querySelector('h2, h3')?.focus({ preventScroll: true });
+  };
 
   const announceConcept = message => {
     window.clearTimeout(conceptToastTimer);
@@ -214,6 +254,13 @@
   };
   const resetConcept = () => {
     conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    showRestaurantPage('home');
+    restaurantParty = 2;
+    restaurantSelectedDate = restaurantDateButtons[0]?.dataset.restaurantDate || 'Tonight';
+    restaurantSelectedTime = '6:15 PM';
+    restaurantDateButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.querySelectorAll('[data-restaurant-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.restaurantTime === restaurantSelectedTime)));
+    updateRestaurantReservation();
     document.querySelectorAll('[data-menu-filter], [data-retail-filter]').forEach(button => {
       const active = button.dataset.menuFilter === 'all' || button.dataset.retailFilter === 'all';
       button.classList.toggle('active', active);
@@ -273,6 +320,31 @@
     if (target) conceptFrame.scrollTo({ top: target.offsetTop, behavior: motion.matches ? 'instant' : 'smooth' });
   }));
   document.querySelectorAll('[data-demo-message]').forEach(button => button.addEventListener('click', () => announceConcept(button.dataset.demoMessage)));
+
+  document.querySelectorAll('[data-restaurant-route]').forEach(button => button.addEventListener('click', () => {
+    showRestaurantPage(button.dataset.restaurantRoute);
+    playEstimateTick();
+  }));
+  restaurantDateButtons.forEach(button => button.addEventListener('click', () => {
+    restaurantDateButtons.forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    restaurantSelectedDate = button.dataset.restaurantDate;
+    updateRestaurantReservation();
+  }));
+  document.querySelectorAll('[data-restaurant-party]').forEach(button => button.addEventListener('click', () => {
+    restaurantParty = Math.max(1, Math.min(8, restaurantParty + (button.dataset.restaurantParty === 'plus' ? 1 : -1)));
+    updateRestaurantReservation();
+  }));
+  document.querySelectorAll('[data-restaurant-time]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-restaurant-time]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    restaurantSelectedTime = button.dataset.restaurantTime;
+    updateRestaurantReservation();
+  }));
+  document.getElementById('restaurant-hold-table').addEventListener('click', () => {
+    const confirmation = document.getElementById('restaurant-confirmation');
+    confirmation.hidden = false;
+    confirmation.querySelector('strong').textContent = `${restaurantSelectedTime} held—for the demo.`;
+    announceConcept('Demo table held. No reservation or personal information was sent.');
+  });
 
   document.querySelectorAll('[data-menu-filter]').forEach(button => button.addEventListener('click', () => {
     const filter = button.dataset.menuFilter;

@@ -61,7 +61,11 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(html, /aria-label="JX Labs home">JX Labs<\/a>/);
   assert.match(html, /BUILT BY JX LABS/);
   assert.match(html, /PROPERTY OF JX LABS/);
-  assert.doesNotMatch(html, /XBased|x\[based\]|DFW \+ Remote/);
+  // Old branding must not appear in the visible shell. Technical deployment
+  // paths may still contain a legacy repository/account name during a rename.
+  assert.doesNotMatch(html, />\s*XBased\s*</i);
+  assert.doesNotMatch(html, /x\[based\]\./i);
+  assert.doesNotMatch(html, /DFW \+ Remote/);
   assert.equal((html.match(/class="[^"]*terminal-view/g) || []).length, 7);
   assert.match(html, /id="sound-toggle"[^>]*aria-pressed="true"/);
   assert.match(html, /class="terminal-button float-signal" href="#booking">Open project request/);
@@ -82,6 +86,14 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(behavior, /updateEstimate/);
   assert.match(behavior, /Selected services:/);
   assert.match(behavior, /index \* 72/);
+});
+test('legacy repository paths do not count as visible XBased branding', () => {
+  const legacyDeployment = deployment(settings, 'XBased420/XBasedSite');
+  const html = renderPage({ settings, ...legacyDeployment });
+  assert.match(html, /src="\/XBasedSite\/site\.js"/);
+  assert.match(html, /aria-label="JX Labs home">JX Labs<\/a>/);
+  assert.doesNotMatch(html, />\s*XBased\s*</i);
+  assert.doesNotMatch(html, /x\[based\]\./i);
 });
 test('concept lab keeps three interactive industry sites inside the terminal', () => {
   const html = renderPage({ settings, ...deployment(settings) });

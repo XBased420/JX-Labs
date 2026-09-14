@@ -11,6 +11,10 @@ for (const name of ['manrope', 'space-grotesk']) {
 const js = await readFile(publicFile('site.js'), 'utf8');
 const favicon = await readFile(publicFile('favicon.svg'));
 let html = renderPage({ settings: { ...settings, endpoint: '', analyticsToken: '', launchReady: false }, site: 'https://xbased420.github.io', base: '/' });
+for (const name of ['ember-vine', 'nightshift-audio', 'common-thread-supply']) {
+  const image = await readFile(publicFile(`assets/concepts/${name}.jpg`));
+  html = html.replaceAll(`src="/assets/concepts/${name}.jpg"`, `src="data:image/jpeg;base64,${image.toString('base64')}"`);
+}
 html = html.replace('<link rel="stylesheet" href="/styles.css">', `<style>${css}</style>`)
   .replace('<script defer src="/site.js"></script>', `<script>${js.replace(/<\/script/gi, '<\\/script')}</script>`)
   .replace('href="/favicon.svg"', `href="data:image/svg+xml;base64,${favicon.toString('base64')}"`)

@@ -1,4 +1,5 @@
 import { services, projects, skills } from './content.mjs';
+import { renderConceptLab } from './concepts.mjs';
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 
@@ -69,6 +70,7 @@ export function renderPage({ settings, site, base = '/' }) {
               <p>DIRECTORY</p>
               <a class="active" href="#home">HOME</a>
               <a href="#work">MY PORTFOLIO</a>
+              <a href="#concepts">CONCEPT LAB</a>
               <a href="#services">SERVICES &amp; ESTIMATE</a>
               <a href="#process">HOW IT WORKS</a>
               <a href="#about">ABOUT XAVIER</a>
@@ -96,7 +98,10 @@ export function renderPage({ settings, site, base = '/' }) {
                 <div class="projects">
                   ${projects.map((project, index) => `<details class="project" data-boot><summary><span class="record-number">${String(index + 1).padStart(2, '0')}</span><div><span class="project-category">${escape(project.category)}</span><h3>${escape(project.name)}</h3><p>${escape(project.line)}</p></div><span class="badge ${project.status === 'LIVE' ? 'live' : ''}">${escape(project.status)}</span><span class="expand-icon" aria-hidden="true">+</span></summary><div class="case-content"><div class="case-columns"><div><h4>THE PROBLEM</h4><p>${escape(project.problem)}</p></div><div><h4>WHAT I BUILT</h4><p>${escape(project.built)}</p></div></div><h4>TOOLS</h4><div class="chips">${project.stack.map(tool => `<span>${escape(tool)}</span>`).join('')}</div>${project.stackPending ? `<p class="placeholder">${escape(project.stackPending)}</p>` : ''}${project.screenshot ? `<img src="${asset(project.screenshot)}" alt="${escape(project.name)} website screenshot" width="1600" height="1000" loading="lazy" decoding="async">` : `<div class="screenshot-slot"><span>PROJECT IMAGE PENDING</span><p>[[NEEDS XAVIER: screenshot — ${escape(project.name)}]]</p></div>`}${project.url ? `<a class="text-link" href="${escape(project.url)}" target="_blank" rel="noopener noreferrer">Visit live site ↗</a>` : ''}</div></details>`).join('')}
                 </div>
+                <aside class="concept-invite" data-boot><div><span>NEW / INTERACTIVE CONCEPTS</span><h3>Restaurant. Events. Retail.</h3><p>Step inside three fictional businesses and try the customer experience for yourself.</p></div><a class="terminal-button" href="#concepts">Enter concept lab</a></aside>
               </section>
+
+              ${renderConceptLab(asset)}
 
               <section id="services" class="terminal-section terminal-view" aria-labelledby="services-title">
                 <div class="section-command" data-boot><span>C:\\XBASED&gt;</span><span>run project_estimator.exe</span></div>

@@ -54,7 +54,7 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(html, /<p>Click login to access\.<\/p>/);
   assert.doesNotMatch(html, /Connection ready|No password required/);
   assert.match(html, /id="terminal-app"/);
-  assert.equal((html.match(/class="[^"]*terminal-view/g) || []).length, 6);
+  assert.equal((html.match(/class="[^"]*terminal-view/g) || []).length, 7);
   assert.match(html, /id="sound-toggle"[^>]*aria-pressed="true"/);
   assert.match(html, /class="terminal-button float-signal" href="#booking">Open project request/);
   assert.match(html, /class="contract-link float-signal" href="#booking">START A PROJECT/);
@@ -74,6 +74,22 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(behavior, /updateEstimate/);
   assert.match(behavior, /Selected services:/);
   assert.match(behavior, /index \* 72/);
+});
+test('concept lab keeps three interactive industry sites inside the terminal', () => {
+  const html = renderPage({ settings, ...deployment(settings) });
+  const behavior = readFileSync(new URL('../public/site.js', import.meta.url), 'utf8');
+  assert.match(html, />CONCEPT LAB</);
+  assert.equal((html.match(/data-concept-demo=/g) || []).length, 3);
+  assert.match(html, /Ember &amp; Vine/);
+  assert.match(html, /NightShift Audio/);
+  assert.match(html, /Common Thread Supply/);
+  assert.match(html, /id="concept-frame"/);
+  assert.match(html, /Build something like this/);
+  assert.match(behavior, /const openConcept/);
+  assert.match(behavior, /activateView\('booking'\)/);
+  for (const name of ['ember-vine', 'nightshift-audio', 'common-thread-supply']) {
+    assert.equal(readFileSync(new URL(`../public/assets/concepts/${name}.jpg`, import.meta.url)).subarray(0, 2).toString('hex'), 'ffd8');
+  }
 });
 test('terminal design lab is a safe three-concept prototype', () => {
   const html = readFileSync(new URL('../public/terminal-lab.html', import.meta.url), 'utf8');

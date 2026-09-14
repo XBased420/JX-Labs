@@ -197,6 +197,125 @@
   updateClock();
   window.setInterval(updateClock, 1000);
 
+  const conceptCatalog = document.getElementById('concept-catalog');
+  const conceptViewer = document.getElementById('concept-viewer');
+  const conceptFrame = document.getElementById('concept-frame');
+  const conceptTitle = document.getElementById('concept-viewer-title');
+  const conceptToast = document.getElementById('concept-toast');
+  const conceptData = JSON.parse(document.getElementById('concept-config')?.textContent || '[]');
+  let activeConcept = null;
+  let conceptToastTimer;
+
+  const announceConcept = message => {
+    window.clearTimeout(conceptToastTimer);
+    conceptToast.textContent = message;
+    conceptToast.hidden = false;
+    conceptToastTimer = window.setTimeout(() => { conceptToast.hidden = true; }, 3200);
+  };
+  const resetConcept = () => {
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    document.querySelectorAll('[data-menu-filter], [data-retail-filter]').forEach(button => {
+      const active = button.dataset.menuFilter === 'all' || button.dataset.retailFilter === 'all';
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    document.querySelectorAll('[data-menu-item], [data-retail-item]').forEach(item => { item.hidden = false; });
+    document.querySelectorAll('[data-event-package]').forEach(button => button.classList.remove('selected'));
+    const eventSelection = document.getElementById('event-selection');
+    if (eventSelection) eventSelection.textContent = 'Select a package to shape your request.';
+    document.getElementById('retail-cart').hidden = true;
+    document.getElementById('retail-cart-items').textContent = 'Your selected concept products will appear here.';
+    document.getElementById('retail-bag-count').textContent = '0';
+    retailSelections.length = 0;
+    conceptToast.hidden = true;
+  };
+  const showConceptCatalog = ({ focus = false } = {}) => {
+    activeConcept = null;
+    conceptViewer.hidden = true;
+    conceptCatalog.hidden = false;
+    conceptFrame.classList.remove('is-phone');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (focus) document.getElementById('concepts-title').focus({ preventScroll: true });
+  };
+  const openConcept = id => {
+    const selected = conceptData.find(concept => concept.id === id);
+    if (!selected) return;
+    activeConcept = selected;
+    conceptCatalog.hidden = true;
+    conceptViewer.hidden = false;
+    conceptViewer.dataset.activeConcept = id;
+    document.querySelectorAll('[data-concept-demo]').forEach(demo => { demo.hidden = demo.dataset.conceptDemo !== id; });
+    conceptTitle.textContent = `${selected.name} / interactive concept`;
+    resetConcept();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    conceptTitle.focus({ preventScroll: true });
+    playPageOpen();
+  };
+
+  document.querySelectorAll('[data-open-concept]').forEach(button => button.addEventListener('click', () => openConcept(button.dataset.openConcept)));
+  document.getElementById('concept-back').addEventListener('click', () => showConceptCatalog({ focus: true }));
+  document.getElementById('concept-restart').addEventListener('click', () => {
+    resetConcept();
+    announceConcept('Concept restarted.');
+  });
+  document.querySelectorAll('[data-concept-device]').forEach(button => button.addEventListener('click', () => {
+    const phone = button.dataset.conceptDevice === 'phone';
+    conceptFrame.classList.toggle('is-phone', phone);
+    document.querySelectorAll('[data-concept-device]').forEach(option => {
+      const selected = option === button;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+  }));
+  document.querySelectorAll('[data-concept-scroll]').forEach(button => button.addEventListener('click', () => {
+    const target = document.getElementById(button.dataset.conceptScroll);
+    if (target) conceptFrame.scrollTo({ top: target.offsetTop, behavior: motion.matches ? 'instant' : 'smooth' });
+  }));
+  document.querySelectorAll('[data-demo-message]').forEach(button => button.addEventListener('click', () => announceConcept(button.dataset.demoMessage)));
+
+  document.querySelectorAll('[data-menu-filter]').forEach(button => button.addEventListener('click', () => {
+    const filter = button.dataset.menuFilter;
+    document.querySelectorAll('[data-menu-filter]').forEach(option => {
+      const selected = option === button;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+    document.querySelectorAll('[data-menu-item]').forEach(item => { item.hidden = filter !== 'all' && item.dataset.menuItem !== filter; });
+  }));
+  document.querySelectorAll('[data-event-package]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-event-package]').forEach(option => option.classList.toggle('selected', option === button));
+    document.getElementById('event-selection').textContent = `${button.dataset.eventPackage} selected. Your event request is ready to customize.`;
+  }));
+  document.querySelectorAll('[data-retail-filter]').forEach(button => button.addEventListener('click', () => {
+    const filter = button.dataset.retailFilter;
+    document.querySelectorAll('[data-retail-filter]').forEach(option => {
+      const selected = option === button;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+    document.querySelectorAll('[data-retail-item]').forEach(item => { item.hidden = filter !== 'all' && item.dataset.retailItem !== filter; });
+  }));
+  const retailSelections = [];
+  document.querySelectorAll('[data-retail-add]').forEach(button => button.addEventListener('click', () => {
+    retailSelections.push(button.dataset.retailAdd);
+    document.getElementById('retail-bag-count').textContent = String(retailSelections.length);
+    document.getElementById('retail-cart-items').textContent = retailSelections.join(' / ');
+    announceConcept(`${button.dataset.retailAdd} added to the demo bag.`);
+  }));
+  document.getElementById('retail-bag').addEventListener('click', () => { document.getElementById('retail-cart').hidden = false; });
+  document.getElementById('retail-cart-close').addEventListener('click', () => { document.getElementById('retail-cart').hidden = true; });
+
+  document.getElementById('concept-request').addEventListener('click', () => {
+    if (!activeConcept) return;
+    const type = document.getElementById('type');
+    const needs = document.getElementById('needs');
+    type.value = activeConcept.interest;
+    if (!needs.value.trim()) needs.value = activeConcept.request;
+    else if (!needs.value.includes(activeConcept.name)) needs.value = `${needs.value.trim()}\n\n${activeConcept.request}`;
+    activateView('booking');
+  });
+
   document.addEventListener('click', event => {
     const link = event.target.closest('a[href^="#"]');
     if (!link || document.body.classList.contains('terminal-locked')) return;
@@ -204,6 +323,7 @@
     if (!terminalViews.some(view => view.id === id)) return;
     event.preventDefault();
     activateView(id);
+    if (id === 'concepts' && link.closest('.directory')) showConceptCatalog();
   });
   window.addEventListener('popstate', () => {
     if (document.body.classList.contains('terminal-locked')) return;

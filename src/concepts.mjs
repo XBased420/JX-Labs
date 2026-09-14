@@ -37,7 +37,7 @@ export function renderConceptLab(asset) {
   const conceptConfig = JSON.stringify(concepts.map(({ id, name, interest, request }) => ({ id, name, interest, request }))).replace(/</g, '\\u003c');
   return `<section id="concepts" class="terminal-section terminal-view concept-lab" aria-labelledby="concepts-title">
     <div class="concept-catalog" id="concept-catalog">
-      <div class="section-command" data-boot><span>C:\\XBASED&gt;</span><span>run concept_lab.exe</span></div>
+      <div class="section-command" data-boot><span>C:\\JX_LABS&gt;</span><span>run concept_lab.exe</span></div>
       <header class="section-head" data-boot><div><p>CONCEPT LAB</p><h2 id="concepts-title" tabindex="-1">See what your business could become.</h2></div><p>Three fictional brands, built to show how the same web skills can solve very different business problems.</p></header>
       <p class="concept-disclaimer" data-boot>CONCEPT PROJECTS // These are original demonstrations, not client businesses.</p>
       <div class="concept-grid">${concepts.map(concept => conceptCard(concept, asset)).join('')}</div>

@@ -1,4 +1,4 @@
-/** XBased booking backend. Deploy from calipxj@gmail.com. No secrets in this file. */
+/** JX Labs booking backend. Deploy from calipxj@gmail.com. No secrets in this file. */
 var LEAD_COLUMNS = ['Timestamp', 'Name', 'Email', 'Phone', 'Business', 'Type', 'Has Site', 'Needs', 'Budget', 'Timeline', 'Socials', 'Source', 'File Link', 'Status', 'Notes'];
 var OWNER_EMAIL = ['calipxj', 'gmail.com'].join('@');
 var BUDGETS = ['Something simple — $100–$500', '$500–$1,000', '$1,000–$2,500', '$2,500+', 'Not sure yet — tell me what it should cost'];
@@ -50,7 +50,7 @@ function setupLeads() {
   var spreadsheet;
   if (id) spreadsheet = SpreadsheetApp.openById(id);
   else {
-    spreadsheet = SpreadsheetApp.create('XBased — Project requests');
+    spreadsheet = SpreadsheetApp.create('JX Labs — Project requests');
     spreadsheet.setSpreadsheetTimeZone('America/Chicago');
     props.setProperty('SHEET_ID', spreadsheet.getId());
   }
@@ -93,7 +93,7 @@ function doPost(e) {
     if (MailApp.getRemainingDailyQuota() >= 2) {
       try {
         MailApp.sendEmail({
-          to: OWNER_EMAIL, replyTo: lead.email, name: 'XBased requests',
+          to: OWNER_EMAIL, replyTo: lead.email, name: 'JX Labs requests',
           subject: '[Project] ' + [lead.name, lead.business, lead.budget, lead.timeline || 'No timeline'].map(subjectText).join(' | '),
           body: ['New project request', '', 'Name: ' + lead.name, 'Email: ' + lead.email, 'Phone: ' + lead.phone, 'Business: ' + lead.business, 'Type: ' + (lead.type || 'Not supplied'), 'Has a site: ' + (lead.hasSite || 'Not supplied'), 'Budget: ' + lead.budget, 'Timeline: ' + (lead.timeline || 'Not supplied'), 'Socials: ' + (lead.socials || 'Not supplied'), 'Found me through: ' + (lead.source || 'Not supplied'), '', 'What they need:', lead.needs, '', 'Hit reply to answer them.'].join('\n')
         });
@@ -102,7 +102,7 @@ function doPost(e) {
       try {
         if (MailApp.getRemainingDailyQuota() < 1) throw new Error('quota');
         MailApp.sendEmail({
-          to: lead.email, replyTo: OWNER_EMAIL, name: 'Xavier at XBased', subject: 'Got your project request — Xavier',
+          to: lead.email, replyTo: OWNER_EMAIL, name: 'Xavier at JX Labs', subject: 'Got your project request — Xavier',
           body: 'Hey ' + lead.name + ',\n\nGot your request for ' + lead.business + '. Thanks for sending it over.\n\nI’ll get back to you within 24 hours with a few times to talk and a rough quote. We’ll figure out the details before anything starts.\n\nForgot a detail or have photos to send? Reply to this email and add them here.\n\n— Xavier'
         });
         autoReplySent = true;

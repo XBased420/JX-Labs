@@ -14,6 +14,7 @@ test('repository subpath reaches every public asset', () => {
 test('custom domain and profile-repository deploy without base path', () => {
   assert.deepEqual(deployment({ ...settings, customDomain: 'xbased.dev' }), { site: 'https://xbased.dev', base: '/' });
   assert.equal(deployment(settings, 'XBased420/XBased420.github.io').base, '/');
+  assert.equal(settings.repository, 'JX-Labs');
 });
 test('missing endpoint stays preview-only, and contains no unobfuscated email', () => {
   const html = renderPage({ settings: { ...settings, endpoint: '' }, ...deployment(settings) });
@@ -43,6 +44,8 @@ test('fonts are genuine WOFF2 and styles honor reduced motion', () => {
   const styles = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /@keyframes signal-glow/);
+  assert.match(styles, /\.terminal-app\{min-height:100dvh;padding:0\}/);
+  assert.match(styles, /\.machine-shell\{width:100%;min-height:100dvh;margin:0;border:0/);
   assert.doesNotMatch(styles, /@keyframes signal-float[^}]*box-shadow/);
 });
 test('production shell requires an explicit login and exposes a sequenced boot', () => {
@@ -54,6 +57,11 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(html, /<p>Click login to access\.<\/p>/);
   assert.doesNotMatch(html, /Connection ready|No password required/);
   assert.match(html, /id="terminal-app"/);
+  assert.match(html, /<title>JX Labs — Websites &amp; booking systems/);
+  assert.match(html, /aria-label="JX Labs home">JX Labs<\/a>/);
+  assert.match(html, /BUILT BY JX LABS/);
+  assert.match(html, /PROPERTY OF JX LABS/);
+  assert.doesNotMatch(html, /XBased|x\[based\]|DFW \+ Remote/);
   assert.equal((html.match(/class="[^"]*terminal-view/g) || []).length, 7);
   assert.match(html, /id="sound-toggle"[^>]*aria-pressed="true"/);
   assert.match(html, /class="terminal-button float-signal" href="#booking">Open project request/);

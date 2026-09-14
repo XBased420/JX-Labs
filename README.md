@@ -1,4 +1,4 @@
-# XBased
+# JX Labs
 
 Xavier’s one-page Astro site: work, services, prices, story, and project requests. The approved starting prices are **$450 / $1,200 / +$600 / $125 per month / 50% deposit**. The production design is an accessible phosphor-green civic terminal with a visitor login gate and a sequenced boot reveal. It uses self-hosted fonts and plain CSS/JavaScript—no animation library or React runtime.
 
@@ -22,7 +22,7 @@ been promoted into the production renderer. The rationale and token systems are 
 
 Complete [the launch guide](docs/LAUNCH.md) once. Then edit, commit, and push to `main`; GitHub Actions installs the locked dependencies, builds Astro on Linux, and deploys to Pages. Do not run `npm run dev` or the Astro compiler on this Windows machine. With `launchReady: false`, the terminal can publish but clearly labels booking as preview-only and the workflow reports remaining setup. Set it to `true` only after the launch checklist passes; missing required configuration then fails the build.
 
-The provisional repository name is `xbased-site`. CI automatically uses the real repository name for the base path. No custom domain is configured yet. Set `customDomain: 'xbased.dev'` only once you own it and complete DNS setup.
+The repository name is `JX-Labs`. CI automatically uses the real repository name for the base path. No custom domain is configured yet. Set `customDomain` only once you own a domain and complete DNS setup.
 
 ## Preview and checks without Astro
 

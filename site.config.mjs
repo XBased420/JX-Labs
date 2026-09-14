@@ -1,8 +1,8 @@
 // Public website settings. SHEET_ID belongs in private Apps Script Properties.
 export default {
-  brand: 'x[based].',
+  brand: 'JX Labs',
   customDomain: '',
-  repository: 'XBasedSite',
+  repository: 'JX-Labs',
   owner: 'XBased420',
   endpoint: 'https://script.google.com/macros/s/AKfycbyAwfOfFmh3bZZ609TDgqd3yoiFWtreA59uA7iNb5Im2lvYqObRvtE52qDUnCDrt49i/exec',
   bookingEnabled: true,

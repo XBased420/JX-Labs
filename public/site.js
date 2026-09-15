@@ -212,6 +212,9 @@
   let eventSelectedPackage = '';
   let eventElapsed = 0;
   let eventPlaybackTimer;
+  const retailSelections = [];
+  let retailSelectedProduct = null;
+  let retailSelectedSize = 'M';
 
   const restaurantDateButtons = [...document.querySelectorAll('[data-restaurant-date-offset]')];
   restaurantDateButtons.forEach(button => {
@@ -318,6 +321,104 @@
     document.getElementById('event-confirmation').hidden = true;
   };
 
+  const showRetailPage = (page, { focus = false } = {}) => {
+    const selectedPage = document.querySelector(`[data-retail-page="${page}"]`);
+    if (!selectedPage) return;
+    document.querySelectorAll('[data-retail-page]').forEach(section => {
+      section.hidden = section !== selectedPage;
+      section.classList.remove('is-entering');
+    });
+    document.querySelectorAll('[data-retail-route]').forEach(button => {
+      const current = button.dataset.retailRoute === page;
+      button.classList.toggle('active', current);
+      if (!button.classList.contains('retail-wordmark')) button.setAttribute('aria-current', current ? 'page' : 'false');
+    });
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    window.requestAnimationFrame(() => selectedPage.classList.add('is-entering'));
+    if (focus) selectedPage.querySelector('h2, h3')?.focus({ preventScroll: true });
+  };
+  const setRetailFilter = filter => {
+    let visibleCount = 0;
+    document.querySelectorAll('[data-retail-filter]').forEach(button => {
+      const selected = button.dataset.retailFilter === filter;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+    document.querySelectorAll('[data-retail-item]').forEach(item => {
+      const visible = filter === 'all' || item.dataset.retailItem === filter;
+      item.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+    document.getElementById('retail-product-count').textContent = `${visibleCount} ${visibleCount === 1 ? 'product' : 'products'}`;
+  };
+  const setRetailCartOpen = open => {
+    document.getElementById('retail-cart').hidden = !open;
+    document.getElementById('retail-cart-scrim').hidden = !open;
+    document.querySelector('[data-concept-demo="retail"]')?.classList.toggle('bag-open', open);
+  };
+  const renderRetailCart = () => {
+    const items = document.getElementById('retail-cart-items');
+    items.replaceChildren();
+    if (!retailSelections.length) {
+      const empty = document.createElement('p');
+      empty.textContent = 'Your selected concept products will appear here.';
+      items.append(empty);
+    } else {
+      retailSelections.forEach((selection, index) => {
+        const item = document.createElement('article');
+        item.className = 'retail-cart-item';
+        const copy = document.createElement('div');
+        const name = document.createElement('strong');
+        const detail = document.createElement('span');
+        const price = document.createElement('b');
+        const remove = document.createElement('button');
+        name.textContent = selection.name;
+        detail.textContent = `${selection.size} / ${selection.color}`;
+        price.textContent = `$${selection.price}`;
+        remove.type = 'button';
+        remove.textContent = 'Remove';
+        remove.setAttribute('aria-label', `Remove ${selection.name} from bag`);
+        remove.addEventListener('click', () => {
+          retailSelections.splice(index, 1);
+          renderRetailCart();
+          announceConcept(`${selection.name} removed from the demo bag.`);
+        });
+        copy.append(name, detail);
+        item.append(copy, price, remove);
+        items.append(item);
+      });
+    }
+    const subtotal = retailSelections.reduce((sum, selection) => sum + selection.price, 0);
+    document.getElementById('retail-bag-count').textContent = String(retailSelections.length);
+    document.getElementById('retail-cart-total').textContent = `$${subtotal}`;
+    document.getElementById('retail-cart-title').textContent = retailSelections.length ? 'Ready to move.' : 'Bag is empty.';
+  };
+  const openRetailProduct = button => {
+    retailSelectedProduct = {
+      name: button.dataset.retailOpen,
+      category: button.dataset.retailCategory,
+      color: button.dataset.retailColor,
+      price: Number(button.dataset.retailPrice),
+      spec: button.dataset.retailSpec,
+      crop: button.dataset.retailCrop
+    };
+    retailSelectedSize = 'M';
+    document.getElementById('retail-detail-name').textContent = retailSelectedProduct.name;
+    document.getElementById('retail-detail-category').textContent = retailSelectedProduct.category;
+    document.getElementById('retail-detail-price').textContent = `$${retailSelectedProduct.price}`;
+    document.getElementById('retail-detail-spec').textContent = retailSelectedProduct.spec;
+    document.getElementById('retail-detail-color').textContent = retailSelectedProduct.color;
+    document.getElementById('retail-detail-photo').className = `retail-product-photo retail-crop-${retailSelectedProduct.crop}`;
+    document.querySelectorAll('[data-retail-size]').forEach(option => option.setAttribute('aria-pressed', String(option.dataset.retailSize === 'M')));
+    document.querySelectorAll('[data-retail-color-option]').forEach(option => {
+      const selected = retailSelectedProduct.color.toLowerCase().includes(option.dataset.retailColorOption.toLowerCase());
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+    document.querySelector('#retail-add-product span').textContent = `$${retailSelectedProduct.price}`;
+    showRetailPage('product', { focus: true });
+  };
+
   const announceConcept = message => {
     window.clearTimeout(conceptToastTimer);
     conceptToast.textContent = message;
@@ -328,6 +429,7 @@
     conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
     showRestaurantPage('home');
     showEventPage('home');
+    showRetailPage('home');
     setEventPlaying(false);
     eventSelectedMix = '';
     eventElapsed = 0;
@@ -341,12 +443,12 @@
     restaurantDateButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
     document.querySelectorAll('[data-restaurant-time]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.restaurantTime === restaurantSelectedTime)));
     updateRestaurantReservation();
-    document.querySelectorAll('[data-menu-filter], [data-retail-filter]').forEach(button => {
-      const active = button.dataset.menuFilter === 'all' || button.dataset.retailFilter === 'all';
+    document.querySelectorAll('[data-menu-filter]').forEach(button => {
+      const active = button.dataset.menuFilter === 'all';
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
     });
-    document.querySelectorAll('[data-menu-item], [data-retail-item]').forEach(item => { item.hidden = false; });
+    document.querySelectorAll('[data-menu-item]').forEach(item => { item.hidden = false; });
     document.querySelectorAll('[data-event-package]').forEach(button => {
       button.classList.remove('selected');
       button.setAttribute('aria-pressed', 'false');
@@ -354,10 +456,12 @@
     document.querySelectorAll('[data-event-duration]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
     document.querySelectorAll('[data-event-addon]').forEach(button => button.setAttribute('aria-pressed', 'false'));
     updateEventPlan();
-    document.getElementById('retail-cart').hidden = true;
-    document.getElementById('retail-cart-items').textContent = 'Your selected concept products will appear here.';
-    document.getElementById('retail-bag-count').textContent = '0';
     retailSelections.length = 0;
+    retailSelectedProduct = null;
+    retailSelectedSize = 'M';
+    setRetailFilter('all');
+    setRetailCartOpen(false);
+    renderRetailCart();
     conceptToast.hidden = true;
   };
   const showConceptCatalog = ({ focus = false } = {}) => {
@@ -480,24 +584,43 @@
     document.getElementById('event-confirmation').hidden = false;
     announceConcept(`${eventSelectedPackage} demo date prepared. No request was sent.`);
   });
-  document.querySelectorAll('[data-retail-filter]').forEach(button => button.addEventListener('click', () => {
-    const filter = button.dataset.retailFilter;
-    document.querySelectorAll('[data-retail-filter]').forEach(option => {
+  document.querySelectorAll('[data-retail-route]').forEach(button => button.addEventListener('click', () => showRetailPage(button.dataset.retailRoute, { focus: true })));
+  document.querySelectorAll('[data-retail-filter]').forEach(button => button.addEventListener('click', () => setRetailFilter(button.dataset.retailFilter)));
+  document.querySelectorAll('[data-retail-open]').forEach(button => button.addEventListener('click', () => openRetailProduct(button)));
+  document.querySelectorAll('[data-retail-size]').forEach(button => button.addEventListener('click', () => {
+    retailSelectedSize = button.dataset.retailSize;
+    document.querySelectorAll('[data-retail-size]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+  }));
+  document.querySelectorAll('[data-retail-color-option]').forEach(button => button.addEventListener('click', () => {
+    if (!retailSelectedProduct) return;
+    retailSelectedProduct.color = button.dataset.retailColorOption;
+    document.getElementById('retail-detail-color').textContent = retailSelectedProduct.color;
+    document.querySelectorAll('[data-retail-color-option]').forEach(option => {
       const selected = option === button;
       option.classList.toggle('active', selected);
       option.setAttribute('aria-pressed', String(selected));
     });
-    document.querySelectorAll('[data-retail-item]').forEach(item => { item.hidden = filter !== 'all' && item.dataset.retailItem !== filter; });
   }));
-  const retailSelections = [];
-  document.querySelectorAll('[data-retail-add]').forEach(button => button.addEventListener('click', () => {
-    retailSelections.push(button.dataset.retailAdd);
-    document.getElementById('retail-bag-count').textContent = String(retailSelections.length);
-    document.getElementById('retail-cart-items').textContent = retailSelections.join(' / ');
-    announceConcept(`${button.dataset.retailAdd} added to the demo bag.`);
+  document.getElementById('retail-add-product').addEventListener('click', () => {
+    if (!retailSelectedProduct) return;
+    retailSelections.push({ ...retailSelectedProduct, size: retailSelectedSize });
+    renderRetailCart();
+    setRetailCartOpen(true);
+    announceConcept(`${retailSelectedProduct.name} added to the demo bag.`);
+  });
+  document.querySelectorAll('[data-retail-look]').forEach(button => button.addEventListener('click', () => {
+    showRetailPage('shop', { focus: true });
+    setRetailFilter(button.dataset.retailLook);
   }));
-  document.getElementById('retail-bag').addEventListener('click', () => { document.getElementById('retail-cart').hidden = false; });
-  document.getElementById('retail-cart-close').addEventListener('click', () => { document.getElementById('retail-cart').hidden = true; });
+  document.getElementById('retail-bag').addEventListener('click', () => setRetailCartOpen(true));
+  document.getElementById('retail-cart-close').addEventListener('click', () => setRetailCartOpen(false));
+  document.getElementById('retail-cart-scrim').addEventListener('click', () => setRetailCartOpen(false));
+  document.getElementById('retail-checkout').addEventListener('click', () => {
+    const message = retailSelections.length
+      ? 'Demo checkout reached. No order, payment, or personal information was sent.'
+      : 'Choose a piece before opening the demo checkout.';
+    announceConcept(message);
+  });
 
   document.getElementById('concept-request').addEventListener('click', () => {
     if (!activeConcept) return;

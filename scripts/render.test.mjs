@@ -119,11 +119,24 @@ test('concept lab keeps three interactive industry sites inside the terminal', (
   assert.match(html, /id="event-plan-total"/);
   assert.match(html, /id="event-hold-date" disabled/);
   assert.match(html, /No payment or event request is sent/);
+  assert.equal((html.match(/data-retail-page=/g) || []).length, 5);
+  for (const page of ['home', 'shop', 'lookbook', 'notes']) assert.match(html, new RegExp(`data-retail-route="${page}"`));
+  assert.equal((html.match(/data-retail-item=/g) || []).length, 8);
+  assert.equal((html.match(/data-retail-open=/g) || []).length, 12);
+  assert.match(html, /id="retail-detail-name"/);
+  assert.match(html, /id="retail-add-product"/);
+  assert.match(html, /id="retail-cart-total"/);
+  assert.match(html, /id="retail-checkout"/);
+  assert.match(html, /No order, payment, or personal information is collected/);
   assert.match(behavior, /const openConcept/);
   assert.match(behavior, /const showRestaurantPage/);
   assert.match(behavior, /const showEventPage/);
   assert.match(behavior, /const setEventPlaying/);
   assert.match(behavior, /const updateEventPlan/);
+  assert.match(behavior, /const showRetailPage/);
+  assert.match(behavior, /const openRetailProduct/);
+  assert.match(behavior, /const renderRetailCart/);
+  assert.match(behavior, /retailSelections\.splice/);
   assert.match(behavior, /restaurantParty = Math\.max\(1, Math\.min\(8/);
   assert.match(behavior, /Demo table held\. No reservation or personal information was sent/);
   assert.match(behavior, /demo date prepared\. No request was sent/);
@@ -131,6 +144,7 @@ test('concept lab keeps three interactive industry sites inside the terminal', (
   for (const name of ['ember-vine', 'ember-vine-interior-v2', 'ember-vine-dish-v2', 'nightshift-audio', 'common-thread-supply']) {
     assert.equal(readFileSync(new URL(`../public/assets/concepts/${name}.jpg`, import.meta.url)).subarray(0, 2).toString('hex'), 'ffd8');
   }
+  assert.equal(readFileSync(new URL('../public/assets/concepts/common-thread-products-v2.png', import.meta.url)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
 });
 test('terminal design lab is a safe three-concept prototype', () => {
   const html = readFileSync(new URL('../public/terminal-lab.html', import.meta.url), 'utf8');

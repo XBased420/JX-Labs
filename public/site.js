@@ -208,6 +208,10 @@
   let restaurantParty = 2;
   let restaurantSelectedDate = 'Tonight';
   let restaurantSelectedTime = '6:15 PM';
+  let eventSelectedMix = '';
+  let eventSelectedPackage = '';
+  let eventElapsed = 0;
+  let eventPlaybackTimer;
 
   const restaurantDateButtons = [...document.querySelectorAll('[data-restaurant-date-offset]')];
   restaurantDateButtons.forEach(button => {
@@ -246,6 +250,74 @@
     if (focus) selectedPage.querySelector('h2, h3')?.focus({ preventScroll: true });
   };
 
+  const updateEventPlayback = () => {
+    const seconds = String(eventElapsed % 60).padStart(2, '0');
+    const playerTime = document.getElementById('event-player-time');
+    const reelTime = document.getElementById('event-reel-time');
+    const progress = document.getElementById('event-progress');
+    if (playerTime) playerTime.textContent = `00:${seconds}`;
+    if (reelTime) reelTime.textContent = seconds;
+    if (progress) progress.style.width = `${Math.min(100, eventElapsed / 60 * 100)}%`;
+  };
+  const setEventPlaying = playing => {
+    const demo = document.querySelector('[data-concept-demo="events"]');
+    window.clearInterval(eventPlaybackTimer);
+    eventPlaybackTimer = undefined;
+    demo?.classList.toggle('is-playing', playing);
+    document.querySelectorAll('[data-event-preview]').forEach(button => {
+      button.setAttribute('aria-pressed', String(playing));
+      const icon = button.querySelector('span');
+      if (icon) icon.textContent = playing ? 'Ⅱ' : '▶';
+      else button.textContent = playing ? 'Ⅱ' : '▶';
+      button.setAttribute('aria-label', playing ? 'Pause NightShift preview' : 'Play NightShift preview');
+    });
+    if (playing) {
+      eventPlaybackTimer = window.setInterval(() => {
+        eventElapsed = eventElapsed >= 60 ? 0 : eventElapsed + 1;
+        updateEventPlayback();
+      }, 1000);
+    }
+  };
+  const selectEventMix = button => {
+    document.querySelectorAll('[data-event-mix]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    eventSelectedMix = button.dataset.eventMix;
+    document.getElementById('event-player-title').textContent = eventSelectedMix;
+    document.getElementById('event-player-meta').textContent = button.dataset.eventMixMeta;
+    eventElapsed = 0;
+    updateEventPlayback();
+  };
+  const showEventPage = (page, { focus = false } = {}) => {
+    const selectedPage = document.querySelector(`[data-event-page="${page}"]`);
+    if (!selectedPage) return;
+    document.querySelectorAll('[data-event-page]').forEach(section => {
+      section.hidden = section !== selectedPage;
+      section.classList.remove('is-entering');
+    });
+    document.querySelectorAll('[data-event-route]').forEach(button => {
+      const current = button.dataset.eventRoute === page;
+      button.classList.toggle('active', current);
+      if (!button.classList.contains('events-wordmark')) button.setAttribute('aria-current', current ? 'page' : 'false');
+    });
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    window.requestAnimationFrame(() => selectedPage.classList.add('is-entering'));
+    if (focus) selectedPage.querySelector('h2, h3')?.focus({ preventScroll: true });
+  };
+  const updateEventPlan = () => {
+    const selectedPackage = document.querySelector('[data-event-package][aria-pressed="true"]');
+    const selectedDuration = document.querySelector('[data-event-duration][aria-pressed="true"]');
+    const selectedAddons = [...document.querySelectorAll('[data-event-addon][aria-pressed="true"]')];
+    const packagePrice = Number(selectedPackage?.dataset.eventPrice || 0);
+    const durationPrice = Number(selectedDuration?.dataset.eventDurationPrice || 0);
+    const addonPrice = selectedAddons.reduce((sum, button) => sum + Number(button.dataset.eventAddonPrice || 0), 0);
+    eventSelectedPackage = selectedPackage?.dataset.eventPackage || '';
+    document.getElementById('event-plan-package').textContent = eventSelectedPackage || 'Choose coverage';
+    document.getElementById('event-plan-duration').textContent = selectedDuration?.dataset.eventDuration || '4 hours';
+    document.getElementById('event-plan-addons').textContent = selectedAddons.length ? selectedAddons.map(button => button.dataset.eventAddon).join(' / ') : 'None selected';
+    document.getElementById('event-plan-total').textContent = eventSelectedPackage ? `$${(packagePrice + durationPrice + addonPrice).toLocaleString('en-US')}` : 'Select a package';
+    document.getElementById('event-hold-date').disabled = !eventSelectedPackage;
+    document.getElementById('event-confirmation').hidden = true;
+  };
+
   const announceConcept = message => {
     window.clearTimeout(conceptToastTimer);
     conceptToast.textContent = message;
@@ -255,6 +327,14 @@
   const resetConcept = () => {
     conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
     showRestaurantPage('home');
+    showEventPage('home');
+    setEventPlaying(false);
+    eventSelectedMix = '';
+    eventElapsed = 0;
+    updateEventPlayback();
+    document.querySelectorAll('[data-event-mix]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+    document.getElementById('event-player-title').textContent = 'Choose a mix';
+    document.getElementById('event-player-meta').textContent = 'Your selection will load here.';
     restaurantParty = 2;
     restaurantSelectedDate = restaurantDateButtons[0]?.dataset.restaurantDate || 'Tonight';
     restaurantSelectedTime = '6:15 PM';
@@ -267,9 +347,13 @@
       button.setAttribute('aria-pressed', String(active));
     });
     document.querySelectorAll('[data-menu-item], [data-retail-item]').forEach(item => { item.hidden = false; });
-    document.querySelectorAll('[data-event-package]').forEach(button => button.classList.remove('selected'));
-    const eventSelection = document.getElementById('event-selection');
-    if (eventSelection) eventSelection.textContent = 'Select a package to shape your request.';
+    document.querySelectorAll('[data-event-package]').forEach(button => {
+      button.classList.remove('selected');
+      button.setAttribute('aria-pressed', 'false');
+    });
+    document.querySelectorAll('[data-event-duration]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.querySelectorAll('[data-event-addon]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+    updateEventPlan();
     document.getElementById('retail-cart').hidden = true;
     document.getElementById('retail-cart-items').textContent = 'Your selected concept products will appear here.';
     document.getElementById('retail-bag-count').textContent = '0';
@@ -278,6 +362,7 @@
   };
   const showConceptCatalog = ({ focus = false } = {}) => {
     activeConcept = null;
+    setEventPlaying(false);
     conceptViewer.hidden = true;
     conceptCatalog.hidden = false;
     conceptFrame.classList.remove('is-phone');
@@ -355,10 +440,46 @@
     });
     document.querySelectorAll('[data-menu-item]').forEach(item => { item.hidden = filter !== 'all' && item.dataset.menuItem !== filter; });
   }));
-  document.querySelectorAll('[data-event-package]').forEach(button => button.addEventListener('click', () => {
-    document.querySelectorAll('[data-event-package]').forEach(option => option.classList.toggle('selected', option === button));
-    document.getElementById('event-selection').textContent = `${button.dataset.eventPackage} selected. Your event request is ready to customize.`;
+  document.querySelectorAll('[data-event-route]').forEach(button => button.addEventListener('click', () => {
+    showEventPage(button.dataset.eventRoute);
+    playEstimateTick();
   }));
+  document.querySelectorAll('[data-event-preview]').forEach(button => button.addEventListener('click', () => {
+    if (!eventSelectedMix) selectEventMix(document.querySelector('[data-event-mix="Golden hour"]'));
+    setEventPlaying(button.getAttribute('aria-pressed') !== 'true');
+    playEstimateTick();
+  }));
+  document.querySelectorAll('[data-event-mix]').forEach(button => button.addEventListener('click', () => {
+    selectEventMix(button);
+    setEventPlaying(true);
+    playEstimateTick();
+  }));
+  document.querySelectorAll('[data-event-package]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-event-package]').forEach(option => {
+      const selected = option === button;
+      option.classList.toggle('selected', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+    updateEventPlan();
+    playEstimateTick();
+  }));
+  document.querySelectorAll('[data-event-duration]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-event-duration]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateEventPlan();
+  }));
+  document.querySelectorAll('[data-event-addon]').forEach(button => button.addEventListener('click', () => {
+    button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+    updateEventPlan();
+  }));
+  document.querySelectorAll('[data-event-service]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-event-service]').forEach(option => option.classList.toggle('active', option === button));
+    document.getElementById('event-service-detail').textContent = button.dataset.eventService;
+  }));
+  document.getElementById('event-hold-date').addEventListener('click', () => {
+    if (!eventSelectedPackage) return;
+    document.getElementById('event-confirmation').hidden = false;
+    announceConcept(`${eventSelectedPackage} demo date prepared. No request was sent.`);
+  });
   document.querySelectorAll('[data-retail-filter]').forEach(button => button.addEventListener('click', () => {
     const filter = button.dataset.retailFilter;
     document.querySelectorAll('[data-retail-filter]').forEach(option => {

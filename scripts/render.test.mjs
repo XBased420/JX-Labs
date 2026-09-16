@@ -95,14 +95,15 @@ test('legacy repository paths do not count as visible XBased branding', () => {
   assert.doesNotMatch(html, />\s*XBased\s*</i);
   assert.doesNotMatch(html, /x\[based\]\./i);
 });
-test('concept lab keeps three interactive industry sites inside the terminal', () => {
+test('concept lab keeps four interactive industry sites inside the terminal', () => {
   const html = renderPage({ settings, ...deployment(settings) });
   const behavior = readFileSync(new URL('../public/site.js', import.meta.url), 'utf8');
   assert.match(html, />CONCEPT LAB</);
-  assert.equal((html.match(/data-concept-demo=/g) || []).length, 3);
+  assert.equal((html.match(/data-concept-demo=/g) || []).length, 4);
   assert.match(html, /Ember &amp; Vine/);
   assert.match(html, /NightShift Audio/);
   assert.match(html, /Common Thread Supply/);
+  assert.match(html, /Goodwork Home Co\./);
   assert.match(html, /id="concept-frame"/);
   assert.match(html, /Build something like this/);
   assert.equal((html.match(/data-restaurant-page=/g) || []).length, 4);
@@ -128,6 +129,19 @@ test('concept lab keeps three interactive industry sites inside the terminal', (
   assert.match(html, /id="retail-cart-total"/);
   assert.match(html, /id="retail-checkout"/);
   assert.match(html, /No order, payment, or personal information is collected/);
+  assert.equal((html.match(/data-goodwork-page=/g) || []).length, 5);
+  for (const page of ['home', 'services', 'estimate', 'schedule', 'track']) assert.match(html, new RegExp(`data-goodwork-route="${page}"`));
+  assert.equal((html.match(/data-goodwork-zone=/g) || []).length, 4);
+  assert.equal((html.match(/data-goodwork-system=/g) || []).length, 4);
+  assert.equal((html.match(/data-goodwork-service=/g) || []).length, 4);
+  assert.equal((html.match(/data-goodwork-issue=/g) || []).length, 4);
+  assert.equal((html.match(/data-goodwork-urgency=/g) || []).length, 3);
+  assert.match(html, /id="goodwork-estimate-continue" disabled/);
+  assert.match(html, /id="goodwork-hold-window"/);
+  assert.match(html, /id="goodwork-track-advance"/);
+  assert.match(html, /id="goodwork-check-zip"/);
+  assert.match(html, /does not book a visit or collect personal information/i);
+  assert.doesNotMatch(html, /<form[^>]+goodwork/i);
   assert.match(behavior, /const openConcept/);
   assert.match(behavior, /const showRestaurantPage/);
   assert.match(behavior, /const showEventPage/);
@@ -137,6 +151,12 @@ test('concept lab keeps three interactive industry sites inside the terminal', (
   assert.match(behavior, /const openRetailProduct/);
   assert.match(behavior, /const renderRetailCart/);
   assert.match(behavior, /retailSelections\.splice/);
+  assert.match(behavior, /const showGoodworkPage/);
+  assert.match(behavior, /const updateGoodworkEstimate/);
+  assert.match(behavior, /const selectGoodworkZone/);
+  assert.match(behavior, /const updateGoodworkTracking/);
+  assert.match(behavior, /outside the demo service area/);
+  assert.match(behavior, /Demo arrival window prepared\. No appointment or personal information was sent/);
   assert.match(behavior, /restaurantParty = Math\.max\(1, Math\.min\(8/);
   assert.match(behavior, /Demo table held\. No reservation or personal information was sent/);
   assert.match(behavior, /demo date prepared\. No request was sent/);
@@ -145,6 +165,7 @@ test('concept lab keeps three interactive industry sites inside the terminal', (
     assert.equal(readFileSync(new URL(`../public/assets/concepts/${name}.jpg`, import.meta.url)).subarray(0, 2).toString('hex'), 'ffd8');
   }
   assert.equal(readFileSync(new URL('../public/assets/concepts/common-thread-products-v2.png', import.meta.url)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(readFileSync(new URL('../public/assets/concepts/goodwork-home-v1.png', import.meta.url)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
 });
 test('terminal design lab is a safe three-concept prototype', () => {
   const html = readFileSync(new URL('../public/terminal-lab.html', import.meta.url), 'utf8');

@@ -18,6 +18,8 @@ for (const name of ['ember-vine', 'ember-vine-interior-v2', 'ember-vine-dish-v2'
 const commonThreadProducts = await readFile(publicFile('assets/concepts/common-thread-products-v2.png'));
 html = html.replaceAll('src="/assets/concepts/common-thread-products-v2.png"', `src="data:image/png;base64,${commonThreadProducts.toString('base64')}"`)
   .replaceAll("url('/assets/concepts/common-thread-products-v2.png')", `url('data:image/png;base64,${commonThreadProducts.toString('base64')}')`);
+const goodworkHero = await readFile(publicFile('assets/concepts/goodwork-home-v1.png'));
+html = html.replaceAll('src="/assets/concepts/goodwork-home-v1.png"', `src="data:image/png;base64,${goodworkHero.toString('base64')}"`);
 html = html.replace('<link rel="stylesheet" href="/styles.css">', `<style>${css}</style>`)
   .replace('<script defer src="/site.js"></script>', `<script>${js.replace(/<\/script/gi, '<\\/script')}</script>`)
   .replace('href="/favicon.svg"', `href="data:image/svg+xml;base64,${favicon.toString('base64')}"`)

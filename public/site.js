@@ -215,6 +215,15 @@
   const retailSelections = [];
   let retailSelectedProduct = null;
   let retailSelectedSize = 'M';
+  let goodworkSystem = '';
+  let goodworkSystemBase = 0;
+  let goodworkIssue = '';
+  let goodworkIssuePrice = 0;
+  let goodworkUrgency = 'Routine';
+  let goodworkUrgencyPrice = 0;
+  let goodworkSelectedDay = 'Today';
+  let goodworkSelectedWindow = '2–4 PM';
+  let goodworkTrackStage = 0;
 
   const restaurantDateButtons = [...document.querySelectorAll('[data-restaurant-date-offset]')];
   restaurantDateButtons.forEach(button => {
@@ -418,6 +427,74 @@
     document.querySelector('#retail-add-product span').textContent = `$${retailSelectedProduct.price}`;
     showRetailPage('product', { focus: true });
   };
+  const showGoodworkPage = (page, { focus = false } = {}) => {
+    const selectedPage = document.querySelector(`[data-goodwork-page="${page}"]`);
+    if (!selectedPage) return;
+    document.querySelectorAll('[data-goodwork-page]').forEach(section => {
+      section.hidden = section !== selectedPage;
+      section.classList.remove('is-entering');
+    });
+    document.querySelectorAll('[data-goodwork-route]').forEach(button => {
+      const current = button.dataset.goodworkRoute === page;
+      button.classList.toggle('active', current);
+      if (!button.classList.contains('goodwork-wordmark')) button.setAttribute('aria-current', current ? 'page' : 'false');
+    });
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    window.requestAnimationFrame(() => selectedPage.classList.add('is-entering'));
+    if (focus) selectedPage.querySelector('h2, h3')?.focus({ preventScroll: true });
+  };
+  const updateGoodworkEstimate = () => {
+    const complete = Boolean(goodworkSystem && goodworkIssue);
+    const starting = goodworkSystemBase + goodworkIssuePrice + goodworkUrgencyPrice;
+    const upper = starting + 140;
+    const range = complete ? `$${starting}–$${upper}` : '—';
+    document.getElementById('goodwork-estimate-total').textContent = complete ? 'Range ready' : goodworkSystem ? 'Choose what changed' : 'Choose a system';
+    document.getElementById('goodwork-estimate-system').textContent = goodworkSystem || 'Not selected';
+    document.getElementById('goodwork-estimate-issue').textContent = goodworkIssue || 'Not selected';
+    document.getElementById('goodwork-estimate-urgency').textContent = goodworkUrgency;
+    document.getElementById('goodwork-estimate-range').textContent = range;
+    document.getElementById('goodwork-estimate-continue').disabled = !complete;
+    document.getElementById('goodwork-schedule-service').textContent = complete ? `${goodworkSystem} / ${goodworkIssue}` : 'Home diagnostic';
+    document.getElementById('goodwork-schedule-range').textContent = complete ? range : 'Confirmed after selection';
+    document.getElementById('goodwork-schedule-confirmation').hidden = true;
+  };
+  const chooseGoodworkSystem = name => {
+    const button = [...document.querySelectorAll('[data-goodwork-system]')].find(option => option.dataset.goodworkSystem === name);
+    if (!button) return;
+    goodworkSystem = button.dataset.goodworkSystem;
+    goodworkSystemBase = Number(button.dataset.goodworkBase);
+    document.querySelectorAll('[data-goodwork-system]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateGoodworkEstimate();
+  };
+  const selectGoodworkZone = button => {
+    document.querySelectorAll('[data-goodwork-zone]').forEach(option => {
+      const selected = option === button;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+    document.getElementById('goodwork-zone-name').textContent = button.dataset.goodworkZone;
+    document.getElementById('goodwork-zone-copy').textContent = button.dataset.goodworkZoneCopy;
+    document.getElementById('goodwork-zone-price').textContent = button.dataset.goodworkZonePrice;
+    document.getElementById('goodwork-zone-slot').textContent = button.dataset.goodworkZoneSlot;
+    document.querySelector('[data-goodwork-start]').dataset.goodworkStart = button.dataset.goodworkZone;
+  };
+  const goodworkTrackSteps = [
+    ['Visit confirmed', 'Your window is reserved for today from 2–4 PM.'],
+    ['Preparing for your job', 'Riley reviewed the job notes and is loading the likely parts.'],
+    ['Technician en route', 'Riley is on the way. The current arrival estimate is 18 minutes.'],
+    ['Technician arrived', 'Riley has arrived and will review the scope before work begins.'],
+    ['Visit complete', 'The work order is closed with notes, photos, and a one-year workmanship promise.']
+  ];
+  const updateGoodworkTracking = () => {
+    const [status, copy] = goodworkTrackSteps[goodworkTrackStage];
+    const progress = goodworkTrackStage * 22.5;
+    document.getElementById('goodwork-track-status').textContent = status;
+    document.getElementById('goodwork-track-copy').textContent = copy;
+    document.getElementById('goodwork-route-progress').style.width = `${progress}%`;
+    document.getElementById('goodwork-route-van').style.left = `${5 + progress}%`;
+    document.querySelectorAll('.goodwork-tracker ol li').forEach((item, index) => item.classList.toggle('complete', index <= goodworkTrackStage));
+    document.getElementById('goodwork-track-advance').textContent = goodworkTrackStage === goodworkTrackSteps.length - 1 ? 'Restart demo status' : 'Advance demo status';
+  };
 
   const announceConcept = message => {
     window.clearTimeout(conceptToastTimer);
@@ -430,6 +507,7 @@
     showRestaurantPage('home');
     showEventPage('home');
     showRetailPage('home');
+    showGoodworkPage('home');
     setEventPlaying(false);
     eventSelectedMix = '';
     eventElapsed = 0;
@@ -462,6 +540,26 @@
     setRetailFilter('all');
     setRetailCartOpen(false);
     renderRetailCart();
+    goodworkSystem = '';
+    goodworkSystemBase = 0;
+    goodworkIssue = '';
+    goodworkIssuePrice = 0;
+    goodworkUrgency = 'Routine';
+    goodworkUrgencyPrice = 0;
+    goodworkSelectedDay = 'Today';
+    goodworkSelectedWindow = '2–4 PM';
+    document.querySelectorAll('[data-goodwork-system], [data-goodwork-issue]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+    document.querySelectorAll('[data-goodwork-urgency]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.goodworkUrgency === 'Routine')));
+    document.querySelectorAll('[data-goodwork-day-offset]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.querySelectorAll('[data-goodwork-window]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.goodworkWindow === goodworkSelectedWindow)));
+    document.getElementById('goodwork-schedule-day').textContent = goodworkSelectedDay;
+    document.getElementById('goodwork-schedule-window').textContent = goodworkSelectedWindow;
+    document.getElementById('goodwork-zip').value = '';
+    document.getElementById('goodwork-zip-status').textContent = 'Demo tip: try a ZIP beginning with 750, 751, 752, 753, or 760.';
+    selectGoodworkZone(document.querySelector('[data-goodwork-zone]'));
+    updateGoodworkEstimate();
+    goodworkTrackStage = 0;
+    updateGoodworkTracking();
     conceptToast.hidden = true;
   };
   const showConceptCatalog = ({ focus = false } = {}) => {
@@ -620,6 +718,70 @@
       ? 'Demo checkout reached. No order, payment, or personal information was sent.'
       : 'Choose a piece before opening the demo checkout.';
     announceConcept(message);
+  });
+  document.querySelectorAll('[data-goodwork-day-offset]').forEach(button => {
+    const offset = Number(button.dataset.goodworkDayOffset);
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    const day = offset === 0 ? 'Today' : offset === 1 ? 'Tomorrow' : new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date);
+    const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+    button.dataset.goodworkDay = `${day}, ${shortDate}`;
+    button.querySelector('small').textContent = day;
+    button.querySelector('b').textContent = shortDate;
+  });
+  document.querySelectorAll('[data-goodwork-route]').forEach(button => button.addEventListener('click', () => showGoodworkPage(button.dataset.goodworkRoute, { focus: true })));
+  document.getElementById('goodwork-check-zip').addEventListener('click', () => {
+    const zip = document.getElementById('goodwork-zip').value.trim();
+    const status = document.getElementById('goodwork-zip-status');
+    if (!/^\d{5}$/.test(zip)) status.textContent = 'Enter a five-digit ZIP code to check the demonstration service area.';
+    else if (/^(750|751|752|753|760)/.test(zip)) status.textContent = `${zip} is inside the demo service area. Next opening: today from 2–4 PM.`;
+    else status.textContent = `${zip} is outside the demo service area. A production site could offer a waitlist or partner referral here.`;
+  });
+  document.querySelectorAll('[data-goodwork-zone]').forEach(button => button.addEventListener('click', () => selectGoodworkZone(button)));
+  document.querySelector('[data-goodwork-start]').addEventListener('click', buttonEvent => {
+    chooseGoodworkSystem(buttonEvent.currentTarget.dataset.goodworkStart);
+    showGoodworkPage('estimate', { focus: true });
+  });
+  document.querySelectorAll('[data-goodwork-service]').forEach(button => button.addEventListener('click', () => {
+    chooseGoodworkSystem(button.dataset.goodworkService);
+    showGoodworkPage('estimate', { focus: true });
+  }));
+  document.querySelectorAll('[data-goodwork-system]').forEach(button => button.addEventListener('click', () => chooseGoodworkSystem(button.dataset.goodworkSystem)));
+  document.querySelectorAll('[data-goodwork-issue]').forEach(button => button.addEventListener('click', () => {
+    goodworkIssue = button.dataset.goodworkIssue;
+    goodworkIssuePrice = Number(button.dataset.goodworkIssuePrice);
+    document.querySelectorAll('[data-goodwork-issue]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateGoodworkEstimate();
+  }));
+  document.querySelectorAll('[data-goodwork-urgency]').forEach(button => button.addEventListener('click', () => {
+    goodworkUrgency = button.dataset.goodworkUrgency;
+    goodworkUrgencyPrice = Number(button.dataset.goodworkUrgencyPrice);
+    document.querySelectorAll('[data-goodwork-urgency]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateGoodworkEstimate();
+  }));
+  document.getElementById('goodwork-estimate-continue').addEventListener('click', () => {
+    if (!goodworkSystem || !goodworkIssue) return;
+    showGoodworkPage('schedule', { focus: true });
+  });
+  document.querySelectorAll('[data-goodwork-day-offset]').forEach(button => button.addEventListener('click', () => {
+    goodworkSelectedDay = button.dataset.goodworkDay;
+    document.querySelectorAll('[data-goodwork-day-offset]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    document.getElementById('goodwork-schedule-day').textContent = goodworkSelectedDay;
+    document.getElementById('goodwork-schedule-confirmation').hidden = true;
+  }));
+  document.querySelectorAll('[data-goodwork-window]').forEach(button => button.addEventListener('click', () => {
+    goodworkSelectedWindow = button.dataset.goodworkWindow;
+    document.querySelectorAll('[data-goodwork-window]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    document.getElementById('goodwork-schedule-window').textContent = goodworkSelectedWindow;
+    document.getElementById('goodwork-schedule-confirmation').hidden = true;
+  }));
+  document.getElementById('goodwork-hold-window').addEventListener('click', () => {
+    document.getElementById('goodwork-schedule-confirmation').hidden = false;
+    announceConcept('Demo arrival window prepared. No appointment or personal information was sent.');
+  });
+  document.getElementById('goodwork-track-advance').addEventListener('click', () => {
+    goodworkTrackStage = goodworkTrackStage === goodworkTrackSteps.length - 1 ? 0 : goodworkTrackStage + 1;
+    updateGoodworkTracking();
   });
 
   document.getElementById('concept-request').addEventListener('click', () => {

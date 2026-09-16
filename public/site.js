@@ -224,6 +224,17 @@
   let goodworkSelectedDay = 'Today';
   let goodworkSelectedWindow = '2–4 PM';
   let goodworkTrackStage = 0;
+  let morrowNeed = 'Relief';
+  let morrowProvider = 'Dr. Amara Patel';
+  let morrowVisit = 'Complete first visit';
+  let morrowDuration = '75 minutes';
+  let morrowTime = 'Thu / 10:30 AM';
+  let morrowCareStage = 0;
+  let relayFreight = 'Full truckload';
+  let relayFreightRate = 1280;
+  let relayTiming = 'Flexible';
+  let relayTimingRate = 0;
+  let relayTrackStage = 1;
 
   const restaurantDateButtons = [...document.querySelectorAll('[data-restaurant-date-offset]')];
   restaurantDateButtons.forEach(button => {
@@ -496,6 +507,94 @@
     document.getElementById('goodwork-track-advance').textContent = goodworkTrackStage === goodworkTrackSteps.length - 1 ? 'Restart demo status' : 'Advance demo status';
   };
 
+  const showMorrowPage = (page, { focus = false } = {}) => {
+    const selectedPage = document.querySelector(`[data-morrow-page="${page}"]`);
+    if (!selectedPage) return;
+    document.querySelectorAll('[data-morrow-page]').forEach(section => {
+      section.hidden = section !== selectedPage;
+      section.classList.remove('is-entering');
+    });
+    document.querySelectorAll('[data-morrow-route]').forEach(button => {
+      const current = button.dataset.morrowRoute === page;
+      button.classList.toggle('active', current);
+      if (!button.classList.contains('morrow-mark')) button.setAttribute('aria-current', current ? 'page' : 'false');
+    });
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    window.requestAnimationFrame(() => selectedPage.classList.add('is-entering'));
+    if (focus) selectedPage.querySelector('h2, h3')?.focus({ preventScroll: true });
+  };
+  const selectMorrowNeed = button => {
+    if (!button) return;
+    morrowNeed = button.dataset.morrowNeed;
+    document.querySelectorAll('[data-morrow-need]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    document.getElementById('morrow-path-title').textContent = morrowNeed;
+    document.getElementById('morrow-path-copy').textContent = button.dataset.morrowNeedCopy;
+  };
+  const updateMorrowVisit = () => {
+    document.getElementById('morrow-visit-name').textContent = morrowVisit;
+    document.getElementById('morrow-visit-duration').textContent = morrowDuration;
+    document.getElementById('morrow-visit-provider').textContent = morrowProvider;
+    document.getElementById('morrow-visit-time').textContent = morrowTime;
+    document.getElementById('morrow-visit-confirmation').hidden = true;
+  };
+  const updateMorrowCarePlan = () => {
+    document.querySelectorAll('.morrow-care-progress li').forEach((item, index) => item.classList.toggle('complete', index <= morrowCareStage));
+    document.getElementById('morrow-care-progress-label').textContent = `Step ${morrowCareStage + 1} of 4`;
+    document.getElementById('morrow-advance-care').textContent = morrowCareStage === 3 ? 'Restart sample care plan' : 'Advance sample care plan';
+  };
+  const showRelayPage = (page, { focus = false } = {}) => {
+    const selectedPage = document.querySelector(`[data-relay-page="${page}"]`);
+    if (!selectedPage) return;
+    document.querySelectorAll('[data-relay-page]').forEach(section => {
+      section.hidden = section !== selectedPage;
+      section.classList.remove('is-entering');
+    });
+    document.querySelectorAll('[data-relay-route]').forEach(button => {
+      const current = button.dataset.relayRoute === page;
+      button.classList.toggle('active', current);
+      if (!button.classList.contains('relay-mark')) button.setAttribute('aria-current', current ? 'page' : 'false');
+    });
+    conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
+    window.requestAnimationFrame(() => selectedPage.classList.add('is-entering'));
+    if (focus) selectedPage.querySelector('h2, h3')?.focus({ preventScroll: true });
+  };
+  const updateRelayQuote = () => {
+    const origin = document.getElementById('relay-origin').value;
+    const destination = document.getElementById('relay-destination').value;
+    const starting = relayFreightRate + relayTimingRate;
+    document.getElementById('relay-quote-lane').textContent = `${origin} → ${destination}`;
+    document.getElementById('relay-quote-service').textContent = relayFreight;
+    document.getElementById('relay-quote-timing').textContent = relayTiming;
+    document.getElementById('relay-quote-transit').textContent = origin === destination ? 'Same-day local' : destination === 'Houston' ? '1–2 business days' : '1 business day';
+    document.getElementById('relay-quote-total').textContent = `$${starting.toLocaleString()}–$${(starting + 230).toLocaleString()}`;
+    document.getElementById('relay-quote-confirmation').textContent = '';
+  };
+  const relayTrackSteps = [
+    ['Picked up', 'Freight was checked, sealed, and released from the Dallas origin at 9:18 AM.'],
+    ['In transit', 'Departed the Ardmore checkpoint. Estimated arrival today at 6:40 PM.'],
+    ['At destination', 'The driver has checked in at the Tulsa receiving gate.'],
+    ['Delivered', 'Delivery is complete. Signed proof of delivery is ready in the sample portal.']
+  ];
+  const updateRelayTracking = () => {
+    const [status, copy] = relayTrackSteps[relayTrackStage];
+    const progress = 12 + relayTrackStage * 27;
+    document.getElementById('relay-track-status').textContent = status;
+    document.getElementById('relay-track-copy').textContent = copy;
+    document.getElementById('relay-map-progress').style.width = `${Math.min(78, 15 + relayTrackStage * 25)}%`;
+    document.getElementById('relay-map-truck').style.left = `${progress}%`;
+    document.getElementById('relay-map-truck').style.top = `${55 - relayTrackStage * 8}%`;
+    document.querySelectorAll('.relay-events li').forEach((item, index) => item.classList.toggle('complete', index <= relayTrackStage));
+    document.getElementById('relay-track-advance').textContent = relayTrackStage === relayTrackSteps.length - 1 ? 'Restart sample status' : 'Advance sample status';
+  };
+  const selectRelayLoad = button => {
+    if (!button) return;
+    document.querySelectorAll('[data-relay-load]').forEach(option => option.classList.toggle('active', option === button));
+    document.getElementById('relay-detail-id').textContent = button.dataset.relayLoad;
+    document.getElementById('relay-detail-lane').textContent = button.dataset.relayLoadLane;
+    document.getElementById('relay-detail-status').textContent = button.dataset.relayLoadStatus;
+    document.getElementById('relay-detail-eta').textContent = button.dataset.relayLoadEta;
+  };
+
   const announceConcept = message => {
     window.clearTimeout(conceptToastTimer);
     conceptToast.textContent = message;
@@ -508,6 +607,8 @@
     showEventPage('home');
     showRetailPage('home');
     showGoodworkPage('home');
+    showMorrowPage('home');
+    showRelayPage('home');
     setEventPlaying(false);
     eventSelectedMix = '';
     eventElapsed = 0;
@@ -560,6 +661,39 @@
     updateGoodworkEstimate();
     goodworkTrackStage = 0;
     updateGoodworkTracking();
+    morrowNeed = 'Relief';
+    morrowProvider = 'Dr. Amara Patel';
+    morrowVisit = 'Complete first visit';
+    morrowDuration = '75 minutes';
+    morrowTime = 'Thu / 10:30 AM';
+    morrowCareStage = 0;
+    selectMorrowNeed(document.querySelector('[data-morrow-need="Relief"]'));
+    document.querySelectorAll('[data-morrow-provider]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.getElementById('morrow-provider-name').textContent = morrowProvider;
+    document.getElementById('morrow-provider-specialty').textContent = 'Restorative care';
+    document.getElementById('morrow-provider-copy').textContent = 'Thoughtful repairs and long-term planning.';
+    document.querySelectorAll('[data-morrow-visit]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.querySelectorAll('[data-morrow-time]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.getElementById('morrow-insurance').value = '';
+    document.getElementById('morrow-insurance-status').textContent = 'This checker uses fictional plans and never contacts an insurer.';
+    updateMorrowVisit();
+    updateMorrowCarePlan();
+    relayFreight = 'Full truckload';
+    relayFreightRate = 1280;
+    relayTiming = 'Flexible';
+    relayTimingRate = 0;
+    relayTrackStage = 1;
+    document.getElementById('relay-origin').value = 'Dallas';
+    document.getElementById('relay-destination').value = 'Tulsa';
+    document.querySelectorAll('[data-relay-freight]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.querySelectorAll('[data-relay-timing]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.querySelectorAll('[data-relay-filter]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    document.querySelectorAll('[data-relay-load]').forEach(load => { load.hidden = false; });
+    selectRelayLoad(document.querySelector('[data-relay-load]'));
+    document.getElementById('relay-track-input').value = 'RN-482901';
+    document.getElementById('relay-track-message').textContent = 'Sample shipment ready to track.';
+    updateRelayQuote();
+    updateRelayTracking();
     conceptToast.hidden = true;
   };
   const showConceptCatalog = ({ focus = false } = {}) => {
@@ -783,6 +917,90 @@
     goodworkTrackStage = goodworkTrackStage === goodworkTrackSteps.length - 1 ? 0 : goodworkTrackStage + 1;
     updateGoodworkTracking();
   });
+  document.querySelectorAll('[data-morrow-route]').forEach(button => button.addEventListener('click', () => showMorrowPage(button.dataset.morrowRoute, { focus: true })));
+  document.querySelectorAll('[data-morrow-need]').forEach(button => button.addEventListener('click', () => {
+    selectMorrowNeed(button);
+    playEstimateTick();
+  }));
+  document.querySelectorAll('[data-morrow-care]').forEach(button => button.addEventListener('click', () => {
+    selectMorrowNeed(document.querySelector(`[data-morrow-need="${button.dataset.morrowCare}"]`));
+    showMorrowPage('visit', { focus: true });
+  }));
+  document.querySelectorAll('[data-morrow-provider]').forEach(button => button.addEventListener('click', () => {
+    morrowProvider = button.dataset.morrowProvider;
+    document.querySelectorAll('[data-morrow-provider]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    document.getElementById('morrow-provider-name').textContent = morrowProvider;
+    document.getElementById('morrow-provider-specialty').textContent = button.dataset.morrowSpecialty;
+    document.getElementById('morrow-provider-copy').textContent = button.dataset.morrowProviderCopy;
+    updateMorrowVisit();
+  }));
+  document.getElementById('morrow-check-insurance').addEventListener('click', () => {
+    const plan = document.getElementById('morrow-insurance').value;
+    const status = document.getElementById('morrow-insurance-status');
+    status.textContent = plan ? `${plan} is supported in this fictional example. Benefits would be verified before care.` : 'Choose a fictional plan to see the demonstration response.';
+  });
+  document.querySelectorAll('[data-morrow-visit]').forEach(button => button.addEventListener('click', () => {
+    morrowVisit = button.dataset.morrowVisit;
+    morrowDuration = button.dataset.morrowDuration;
+    document.querySelectorAll('[data-morrow-visit]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateMorrowVisit();
+  }));
+  document.querySelectorAll('[data-morrow-time]').forEach(button => button.addEventListener('click', () => {
+    morrowTime = button.dataset.morrowTime;
+    document.querySelectorAll('[data-morrow-time]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateMorrowVisit();
+  }));
+  document.getElementById('morrow-hold-visit').addEventListener('click', () => {
+    document.getElementById('morrow-visit-confirmation').hidden = false;
+    announceConcept('Demo dental visit prepared. No appointment, medical information, or personal information was sent.');
+  });
+  document.getElementById('morrow-advance-care').addEventListener('click', () => {
+    morrowCareStage = morrowCareStage === 3 ? 0 : morrowCareStage + 1;
+    updateMorrowCarePlan();
+  });
+  document.querySelectorAll('[data-relay-route]').forEach(button => button.addEventListener('click', () => showRelayPage(button.dataset.relayRoute, { focus: true })));
+  document.querySelectorAll('[data-relay-quote-type]').forEach(button => button.addEventListener('click', () => {
+    const choice = document.querySelector(`[data-relay-freight="${button.dataset.relayQuoteType}"]`);
+    choice?.click();
+    showRelayPage('quote', { focus: true });
+  }));
+  document.querySelectorAll('[data-relay-freight]').forEach(button => button.addEventListener('click', () => {
+    relayFreight = button.dataset.relayFreight;
+    relayFreightRate = Number(button.dataset.relayRate);
+    document.querySelectorAll('[data-relay-freight]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateRelayQuote();
+  }));
+  document.querySelectorAll('[data-relay-timing]').forEach(button => button.addEventListener('click', () => {
+    relayTiming = button.dataset.relayTiming;
+    relayTimingRate = Number(button.dataset.relayTimingRate);
+    document.querySelectorAll('[data-relay-timing]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    updateRelayQuote();
+  }));
+  document.getElementById('relay-origin').addEventListener('change', updateRelayQuote);
+  document.getElementById('relay-destination').addEventListener('change', updateRelayQuote);
+  document.getElementById('relay-save-quote').addEventListener('click', () => {
+    document.getElementById('relay-quote-confirmation').textContent = 'Demo quote prepared. No freight request, business information, or payment was sent.';
+    announceConcept('Fictional freight quote prepared. No request was sent.');
+  });
+  document.getElementById('relay-track-submit').addEventListener('click', () => {
+    const reference = document.getElementById('relay-track-input').value.toUpperCase().replace(/[–—]/g, '-').trim();
+    const status = document.getElementById('relay-track-message');
+    if (reference === 'RN-482901') {
+      relayTrackStage = 1;
+      updateRelayTracking();
+      status.textContent = 'RN–482901 found. Showing fictional live progress.';
+    } else status.textContent = 'Use sample tracking number RN–482901 to open the demonstration shipment.';
+  });
+  document.getElementById('relay-track-advance').addEventListener('click', () => {
+    relayTrackStage = relayTrackStage === relayTrackSteps.length - 1 ? 0 : relayTrackStage + 1;
+    updateRelayTracking();
+  });
+  document.querySelectorAll('[data-relay-filter]').forEach(button => button.addEventListener('click', () => {
+    const filter = button.dataset.relayFilter;
+    document.querySelectorAll('[data-relay-filter]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+    document.querySelectorAll('[data-relay-load]').forEach(load => { load.hidden = filter !== 'all' && load.dataset.relayLoadState !== filter; });
+  }));
+  document.querySelectorAll('[data-relay-load]').forEach(button => button.addEventListener('click', () => selectRelayLoad(button)));
 
   document.getElementById('concept-request').addEventListener('click', () => {
     if (!activeConcept) return;

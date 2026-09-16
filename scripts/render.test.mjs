@@ -95,15 +95,17 @@ test('legacy repository paths do not count as visible XBased branding', () => {
   assert.doesNotMatch(html, />\s*XBased\s*</i);
   assert.doesNotMatch(html, /x\[based\]\./i);
 });
-test('concept lab keeps four interactive industry sites inside the terminal', () => {
+test('concept lab keeps six interactive industry sites inside the terminal', () => {
   const html = renderPage({ settings, ...deployment(settings) });
   const behavior = readFileSync(new URL('../public/site.js', import.meta.url), 'utf8');
   assert.match(html, />CONCEPT LAB</);
-  assert.equal((html.match(/data-concept-demo=/g) || []).length, 4);
+  assert.equal((html.match(/data-concept-demo=/g) || []).length, 6);
   assert.match(html, /Ember &amp; Vine/);
   assert.match(html, /NightShift Audio/);
   assert.match(html, /Common Thread Supply/);
   assert.match(html, /Goodwork Home Co\./);
+  assert.match(html, /Morrow Dental Studio/);
+  assert.match(html, /Relay North Logistics/);
   assert.match(html, /id="concept-frame"/);
   assert.match(html, /Build something like this/);
   assert.equal((html.match(/data-restaurant-page=/g) || []).length, 4);
@@ -142,6 +144,25 @@ test('concept lab keeps four interactive industry sites inside the terminal', ()
   assert.match(html, /id="goodwork-check-zip"/);
   assert.match(html, /does not book a visit or collect personal information/i);
   assert.doesNotMatch(html, /<form[^>]+goodwork/i);
+  assert.equal((html.match(/data-morrow-page=/g) || []).length, 5);
+  for (const page of ['home', 'care', 'team', 'visit', 'portal']) assert.match(html, new RegExp(`data-morrow-route="${page}"`));
+  assert.equal((html.match(/data-morrow-need=/g) || []).length, 4);
+  assert.equal((html.match(/data-morrow-provider=/g) || []).length, 3);
+  assert.equal((html.match(/data-morrow-visit=/g) || []).length, 3);
+  assert.match(html, /id="morrow-check-insurance"/);
+  assert.match(html, /id="morrow-hold-visit"/);
+  assert.match(html, /id="morrow-advance-care"/);
+  assert.match(html, /No real medical, insurance, appointment, or identity information/i);
+  assert.doesNotMatch(html, /<form[^>]+morrow/i);
+  assert.equal((html.match(/data-relay-page=/g) || []).length, 5);
+  for (const page of ['home', 'capabilities', 'quote', 'track', 'portal']) assert.match(html, new RegExp(`data-relay-route="${page}"`));
+  assert.equal((html.match(/data-relay-freight=/g) || []).length, 3);
+  assert.equal((html.match(/data-relay-load=/g) || []).length, 4);
+  assert.match(html, /id="relay-save-quote"/);
+  assert.match(html, /id="relay-track-submit"/);
+  assert.match(html, /id="relay-track-advance"/);
+  assert.match(html, /No freight request, company data, or payment is sent/i);
+  assert.doesNotMatch(html, /<form[^>]+relay/i);
   assert.match(behavior, /const openConcept/);
   assert.match(behavior, /const showRestaurantPage/);
   assert.match(behavior, /const showEventPage/);
@@ -155,6 +176,12 @@ test('concept lab keeps four interactive industry sites inside the terminal', ()
   assert.match(behavior, /const updateGoodworkEstimate/);
   assert.match(behavior, /const selectGoodworkZone/);
   assert.match(behavior, /const updateGoodworkTracking/);
+  assert.match(behavior, /const showMorrowPage/);
+  assert.match(behavior, /const selectMorrowNeed/);
+  assert.match(behavior, /const updateMorrowCarePlan/);
+  assert.match(behavior, /const showRelayPage/);
+  assert.match(behavior, /const updateRelayQuote/);
+  assert.match(behavior, /const updateRelayTracking/);
   assert.match(behavior, /outside the demo service area/);
   assert.match(behavior, /Demo arrival window prepared\. No appointment or personal information was sent/);
   assert.match(behavior, /restaurantParty = Math\.max\(1, Math\.min\(8/);
@@ -166,6 +193,8 @@ test('concept lab keeps four interactive industry sites inside the terminal', ()
   }
   assert.equal(readFileSync(new URL('../public/assets/concepts/common-thread-products-v2.png', import.meta.url)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
   assert.equal(readFileSync(new URL('../public/assets/concepts/goodwork-home-v1.png', import.meta.url)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(readFileSync(new URL('../public/assets/concepts/morrow-dental-v1.png', import.meta.url)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(readFileSync(new URL('../public/assets/concepts/relay-north-v1.png', import.meta.url)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
 });
 test('terminal design lab is a safe three-concept prototype', () => {
   const html = readFileSync(new URL('../public/terminal-lab.html', import.meta.url), 'utf8');

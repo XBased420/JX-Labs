@@ -145,3 +145,99 @@
 @container relay (max-width:820px){.relay-nav{grid-template-columns:1fr auto}.relay-nav nav{order:3;grid-column:1/3;width:100%;overflow-x:auto;border-top:1px solid var(--rn-black)}.relay-nav nav button{flex:0 0 auto;min-height:54px}.relay-login{display:none}.relay-hero-copy{width:auto;padding:5rem 1.2rem}.relay-hero h2{font-size:6rem}.relay-hero>aside{position:relative;right:auto;bottom:auto;width:auto;margin:0 1.2rem 1.2rem}.relay-home-grid{grid-template-columns:1fr 1fr}.relay-route-strip{grid-template-columns:auto 1fr auto}.relay-route-strip>b,.relay-route-strip i:last-of-type{display:none}.relay-page-head{grid-template-columns:1fr;padding:4rem 1.2rem}.relay-page-head h2,.relay-page-head>span{grid-column:1;grid-row:auto}.relay-cap-grid{grid-template-columns:1fr}.relay-cap-grid article{min-height:400px}.relay-lane-table header,.relay-lane-table>div{grid-template-columns:1fr}.relay-quote-shell{grid-template-columns:1fr;padding:2rem 1rem 4rem}.relay-quote-ticket{position:static}.relay-map{min-height:760px}.relay-map-route{inset:0 0 40%}.relay-map>aside{top:auto;width:auto;height:40%}.relay-portal-head{grid-template-columns:1fr}.relay-portal-head dl{overflow-x:auto}.relay-portal-grid{grid-template-columns:1fr}.relay-loads{overflow-x:auto}.relay-loads>header,.relay-loads>button{min-width:690px}.relay-footer{grid-template-columns:1fr}.relay-footer nav{flex-wrap:wrap}.relay-footer small{grid-column:1;padding:1rem}.relay-footer .relay-mark{width:max-content}}
 @container relay (max-width:460px){.relay-hero h2,.relay-page-head h2,.relay-portal-head h2{font-size:3.1rem;overflow-wrap:anywhere}.relay-portal-head{padding:3rem 1rem}.relay-hero-copy>div{align-items:flex-start;flex-direction:column}.relay-hero aside dl{grid-template-columns:1fr}.relay-home-grid{grid-template-columns:1fr}.relay-select-row,.relay-quote-types,.relay-timing{grid-template-columns:1fr}.relay-select-row>span{display:none}.relay-track-search{grid-template-columns:1fr}.relay-track-search>span{grid-template-columns:1fr}.relay-track-search p{grid-column:1}.relay-map-route .checkpoint{display:none}.relay-events li{grid-template-columns:1fr}.relay-portal-tools{align-items:flex-start;flex-direction:column}.relay-portal-tools>div{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.morrow-page.is-entering,.relay-page.is-entering{animation:none}.relay-map-route>i,.relay-map-route>em{transition:none}}
+
+/* Give embedded concepts the full usable width on actual phones. */
+@media(max-width:720px){
+  .concept-viewer{margin-inline:-1rem}
+  .concept-stage{padding:0;border-inline:0}
+  .concept-frame{scrollbar-width:thin}
+}
+
+/* Ember & Vine: keep every page reachable and contain the menu filters. */
+@container concept (max-width:390px){
+  .restaurant-nav{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch;gap:0;padding:0}
+  .restaurant-nav .restaurant-wordmark{justify-self:start;margin-left:1rem}
+  .restaurant-nav nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;border-top:1px solid #291b1638}
+  .restaurant-nav nav>button:not(.restaurant-reserve){display:block}
+  .restaurant-nav nav>button,.restaurant-nav .restaurant-reserve{min-width:0;margin:0;padding:.7rem .15rem;font-size:.66rem;white-space:nowrap;text-align:center}
+  .restaurant-menu-layout{grid-template-columns:minmax(0,1fr)}
+  .restaurant-menu-layout>aside,.restaurant-menu-list{min-width:0}
+  .restaurant-filters{width:100%;max-width:100%;margin-inline:0;padding-inline:0}
+  .restaurant-menu-list li{grid-template-columns:minmax(0,1fr) auto}
+  .restaurant-hero h2,.restaurant-page-intro h2,.restaurant-story-hero h2{font-size:clamp(2.45rem,10cqw,3.3rem)}
+  .restaurant-story-body blockquote{font-size:clamp(2.5rem,10cqw,3.1rem)}
+}
+
+/* NightShift: the record graphic must sit behind, not on top of, mix names. */
+@container concept (max-width:390px){
+  .event-mix-grid>button{min-width:0;min-height:260px;padding:1.5rem 1rem}
+  .event-mix-grid>button::before{width:175px;right:-60px;bottom:-85px;opacity:.55}
+  .event-mix-grid strong{position:relative;z-index:1;max-width:100%;font-size:clamp(1.85rem,8cqw,2.5rem);overflow-wrap:normal}
+  .event-mix-grid i,.event-mix-grid span,.event-mix-grid small{position:relative;z-index:1}
+  .event-page-intro h2,.event-mix-note h3,.event-production h3{font-size:clamp(2.5rem,10cqw,3.3rem)}
+}
+
+/* Common Thread: editorial grids must shrink with the embedded viewport. */
+@container concept (max-width:390px){
+  .retail-demo .retail-hero,.retail-look,.retail-look-two,.retail-demo .retail-story,.retail-page-intro,.retail-home-note{grid-template-columns:minmax(0,1fr)}
+  .retail-demo .retail-hero>div,.retail-look>div,.retail-demo .retail-story>div,.retail-page-intro>div,.retail-home-note>div{min-width:0}
+  .retail-demo .retail-hero>img,.retail-look-image,.retail-demo .retail-story img{min-width:0;max-width:100%}
+  .retail-demo .retail-hero h2{font-size:clamp(2.6rem,10cqw,3.3rem)}
+  .retail-page-intro h2{font-size:clamp(2.6rem,10cqw,3.2rem)}
+  .retail-look h3,.retail-demo .retail-story h3,.retail-materials h3,.retail-repair h3,.retail-home-note h3{font-size:clamp(2.4rem,9cqw,3.2rem)}
+  .retail-demo .retail-cart{padding:1.2rem}
+  .retail-demo .retail-cart h3{font-size:2.35rem}
+}
+@container concept (max-width:310px){
+  .retail-drop-products,.retail-demo .retail-products{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Goodwork: let service, estimate, schedule, and tracking panels contract. */
+@container concept (max-width:390px){
+  .goodwork-nav nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:0}
+  .goodwork-nav nav button{min-width:0;padding:.75rem .25rem;text-align:center}
+  .goodwork-hero,.goodwork-diagnostic-grid,.goodwork-service-proof,.goodwork-estimator,.goodwork-scheduler,.goodwork-tracker{grid-template-columns:minmax(0,1fr)}
+  .goodwork-hero-copy,.goodwork-hero figure,.goodwork-service-proof>div,.goodwork-service-proof img,.goodwork-route-map,.goodwork-tracker>aside,.goodwork-estimator>section,.goodwork-scheduler>section{min-width:0;max-width:100%}
+  .goodwork-hero-copy,.goodwork-service-proof>div,.goodwork-route-map,.goodwork-tracker>aside{padding:2.5rem 1rem}
+  .goodwork-page-head{padding:3rem 1rem}
+  .goodwork-hero h2,.goodwork-page-head h2,.goodwork-page-head.compact h2{font-size:clamp(2.65rem,10cqw,3.45rem)}
+  .goodwork-diagnostic h3,.goodwork-job-board h3,.goodwork-service-proof h3{font-size:clamp(2.5rem,9cqw,3.1rem)}
+  .goodwork-estimator fieldset,.goodwork-scheduler fieldset{min-width:0}
+  .goodwork-date-options,.goodwork-window-options{grid-template-columns:minmax(0,1fr)}
+  .goodwork-route-line>span{font-size:.55rem}
+  .goodwork-schedule-ticket{min-width:0;padding:2rem 1rem}
+  .goodwork-schedule-ticket h3,.goodwork-tracker>aside h3{font-size:clamp(2rem,9cqw,2.6rem);overflow-wrap:anywhere}
+}
+
+/* Morrow: remove minimum-content pressure from care and visit grids. */
+@container morrow (max-width:390px){
+  .morrow-nav nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:0}
+  .morrow-nav nav button{min-width:0;padding:.75rem .25rem;font-size:.82rem;text-align:center}
+  .morrow-hero,.morrow-page-head,.morrow-path-grid,.morrow-visit-shell{grid-template-columns:minmax(0,1fr)}
+  .morrow-hero>div,.morrow-page-head>*,.morrow-visit-shell>*,.morrow-visit-summary{min-width:0;max-width:100%}
+  .morrow-hero>div,.morrow-path,.morrow-page-head,.morrow-visit-shell{padding:2.5rem 1rem}
+  .morrow-hero h2,.morrow-page-head h2,.morrow-page-head.compact h2,.morrow-portal-head h2{font-size:clamp(2.55rem,10cqw,3.2rem);overflow-wrap:anywhere}
+  .morrow-visit-summary{padding:2rem 1rem}
+  .morrow-visit-summary h3{font-size:clamp(2.2rem,9cqw,2.7rem)}
+  .morrow-portal-grid>aside,.morrow-portal-grid>section{min-width:0;padding:1.5rem 1rem}
+}
+
+/* Relay: read each shipment as a card instead of a sideways table. */
+@container relay (max-width:390px){
+  .relay-nav nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+  .relay-nav nav button{min-width:0;min-height:44px;padding:.65rem .25rem;font-size:.82rem;text-align:center}
+  .relay-cap-grid{grid-template-columns:minmax(0,1fr)}
+  .relay-cap-grid article{min-width:0;padding:2rem 1rem}
+  .relay-cap-grid h3{font-size:clamp(2.4rem,10cqw,3rem);overflow-wrap:anywhere}
+  .relay-portal-head h2{font-size:clamp(2rem,8cqw,2.6rem);line-height:.9}
+  .relay-portal-head dl{grid-template-columns:minmax(0,1fr);overflow:visible}
+  .relay-portal-head dl>div{min-width:0}
+  .relay-loads{overflow:visible}
+  .relay-loads>header{display:none}
+  .relay-loads>button{min-width:0;grid-template-columns:minmax(0,1fr) auto;gap:.25rem .5rem;padding:1rem}
+  .relay-loads>button b,.relay-loads>button span{grid-column:1/-1;min-width:0}
+  .relay-loads>button i{grid-column:1;min-width:0}
+  .relay-loads>button small{grid-column:2;text-align:right}
+  .relay-load-detail{min-width:0;padding:2rem 1rem}
+  .relay-load-detail h3{font-size:2.5rem}
+}

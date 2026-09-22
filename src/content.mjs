@@ -1,7 +1,7 @@
 export const services = [
   ['One-page site', 'Your business, your work, and a clear way to get in touch.'],
   ['Multi-page site', 'Room for your services, your story, and the details people ask for.'],
-  ['Booking system', 'Turn “are you available?” into an organized request.'],
+  ['Booking system', 'Customers request a service and preferred time. You review the details and confirm the booking.'],
   ['Redesign of an existing site', 'Make the site you already have easier to use.'],
   ['Ongoing updates & maintenance', 'Keep your hours, services, and content current.'],
   ['Domain + hosting setup', 'Get your address connected and your site online.'],

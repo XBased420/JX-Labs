@@ -73,10 +73,9 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(html, />MY PORTFOLIO</);
   assert.match(html, />SERVICES &amp; ESTIMATE</);
   assert.match(html, />HOW IT WORKS</);
-  assert.match(html, />ABOUT XAVIER</);
+  assert.match(html, />ABOUT JX LABS</);
   assert.match(html, /id="estimate-total"/);
   assert.match(html, /id="estimate-start"/);
-  assert.match(html, /extensive customer-service experience/);
   assert.doesNotMatch(html, /SELF-TAUGHT BUILDER|No degree, no big agency handoff/);
   assert.doesNotMatch(html, /github\.com\/XBased420/);
   assert.ok((html.match(/data-boot/g) || []).length >= 20);

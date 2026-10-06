@@ -1,4 +1,4 @@
-import { services, projects, skills } from './content.mjs';
+import { services, projects } from './content.mjs';
 import { renderConceptLab } from './concepts.mjs';
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
@@ -73,10 +73,9 @@ export function renderPage({ settings, site, base = '/' }) {
               <a href="#concepts">CONCEPT LAB</a>
               <a href="#services">SERVICES &amp; ESTIMATE</a>
               <a href="#process">HOW IT WORKS</a>
-              <a href="#about">ABOUT XAVIER</a>
+              <a href="#about">ABOUT JX LABS</a>
               <a class="contract-link float-signal" href="#booking">START A PROJECT</a>
               <div class="machine-readout">
-                <span>LOCAL NODE</span><strong>DFW–TX</strong>
                 <span>RESPONSE TIME</span><strong>&lt; 24 HOURS</strong>
                 <span>SYSTEM STATE</span><strong>${ready ? 'ONLINE' : 'PREVIEW'}</strong>
               </div>
@@ -134,10 +133,37 @@ export function renderPage({ settings, site, base = '/' }) {
               </section>
 
               <section id="about" class="terminal-section terminal-view about" aria-labelledby="about-title">
-                <div class="section-command" data-boot><span>C:\\JX_LABS&gt;</span><span>read operator_profile.txt</span></div>
+                <div class="section-command" data-boot><span>C:\\JX_LABS&gt;</span><span>read company_profile.txt</span></div>
                 <div class="about-grid">
-                  <div data-boot><p>ABOUT XAVIER</p><h2 id="about-title">Xavier<br>DFW–TX</h2><span class="operator-status">WEB DEVELOPER / DIRECT CLIENT SERVICE</span></div>
-                  <div class="about-copy"><p class="lead" data-boot>I build practical digital systems for businesses that need their website to do more than look good.</p><p data-boot>My background includes extensive customer-service experience. It taught me to listen closely, communicate clearly, and solve the problem behind the request—not just the visible symptom.</p><p data-boot>From discovery and structure through development, testing, and launch, I handle the project directly. You always know who is building the work, why each decision was made, and what happens next.</p><div class="skills" data-boot><p>WORKING TOOLSET</p><div class="chips">${skills.map(skill => `<span>${escape(skill)}</span>`).join('')}</div></div></div>
+                  <div data-boot><p>ABOUT JX LABS</p><h2 id="about-title">JX Labs</h2><span class="operator-status">WEBSITES / AI / AUTOMATION</span><p class="about-reach">Anyone. Anywhere. Anyplace.</p></div>
+                  <div class="about-copy">
+                    <p class="lead" data-boot>Creative technology. Within reach.</p>
+                    <p data-boot>JX Labs helps businesses look professional online and simplify the work behind the scenes. We bring together creative design, websites, and practical AI tools at affordable prices, with a special focus on local and small businesses. Wherever you are, we’re ready to help.</p>
+                    <section class="about-block" aria-labelledby="about-mission" data-boot>
+                      <h3 id="about-mission">Our mission</h3>
+                      <p>Make modern technology accessible to businesses that want to grow. We help you put AI and the latest digital tools to work in ways that fit your goals, your day-to-day needs, and your budget.</p>
+                    </section>
+                    <section class="about-block" aria-labelledby="about-services" data-boot>
+                      <h3 id="about-services">What we provide</h3>
+                      <p>From your first website to tools that handle repetitive tasks, we build around what your business needs.</p>
+                      <ul class="about-services">${services.map(([name]) => `<li>${escape(name)}</li>`).join('')}</ul>
+                      <a class="text-link" href="#services">Explore services &amp; build an estimate →</a>
+                    </section>
+                    <section class="about-block" aria-labelledby="about-approach" data-boot>
+                      <h3 id="about-approach">Creativity drives the work</h3>
+                      <p>We believe better ideas lead to better results with AI. We experiment, ask thoughtful questions, and refine the details to give your business a look and experience of its own. When we use AI, we shape and review the output so the finished work feels natural, polished, and true to your brand.</p>
+                    </section>
+                    <section class="about-block" aria-labelledby="about-values" data-boot>
+                      <h3 id="about-values">What you can expect</h3>
+                      <dl class="about-values">
+                        <div><dt>Affordability</dt><dd>Clear scope and options that respect your budget.</dd></div>
+                        <div><dt>Creative design</dt><dd>A distinct identity shaped around your business.</dd></div>
+                        <div><dt>Practical problem-solving</dt><dd>Useful solutions to the challenges you face every day.</dd></div>
+                        <div><dt>Great service</dt><dd>Careful listening, clear communication, and support along the way.</dd></div>
+                      </dl>
+                    </section>
+                    <div class="about-cta" data-boot>${cta('Let’s talk about your business')}</div>
+                  </div>
                 </div>
               </section>
 

@@ -1,5 +1,9 @@
 import { services, projects } from './content.mjs';
 import { renderConceptLab } from './concepts.mjs';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+
+const stylesheetVersion = createHash('sha256').update(readFileSync('public/styles.css')).digest('hex').slice(0, 12);
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 
@@ -34,7 +38,7 @@ export function renderPage({ settings, site, base = '/' }) {
   <title>JX Labs — Websites &amp; booking systems | Xavier · DFW</title><meta name="description" content="JX Labs builds websites and booking systems for small businesses, barbers, DJs, and artists in Dallas, Carrollton, and across DFW. Start a project.">
   ${!settings.launchReady ? '<meta name="robots" content="noindex, nofollow">' : ''}<link rel="canonical" href="${escape(canonical)}"><meta name="theme-color" content="#050905">
   <meta property="og:type" content="website"><meta property="og:title" content="JX Labs — Websites that pull their weight."><meta property="og:description" content="Websites and booking systems, built by JX Labs."><meta property="og:url" content="${escape(canonical)}"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="JX Labs — Websites that pull their weight"><meta name="twitter:description" content="Websites and booking systems for businesses and creatives.">
-  <link rel="icon" type="image/svg+xml" href="${asset('favicon.svg')}"><link rel="preload" href="${asset('assets/fonts/space-grotesk-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('assets/fonts/manrope-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="${asset('styles.css')}"><script>document.documentElement.classList.add('js')</script><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head>
+  <link rel="icon" type="image/svg+xml" href="${asset('favicon.svg')}"><link rel="preload" href="${asset('assets/fonts/space-grotesk-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('assets/fonts/manrope-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="${asset(`styles.css?v=${stylesheetVersion}`)}"><script>document.documentElement.classList.add('js')</script><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head>
   <body class="terminal-locked">
     <div class="login-screen" id="login-screen" role="dialog" aria-modal="true" aria-labelledby="login-title">
       <div class="login-housing">

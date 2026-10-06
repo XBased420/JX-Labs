@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import settings, { deployment } from '../site.config.mjs';
 import { renderPage } from '../src/render.mjs';
+test('stylesheet URL changes with the stylesheet contents', () => {
+  const html = renderPage({ settings, site: 'https://xbased420.github.io', base: '/test-repo/' });
+  const version = createHash('sha256').update(readFileSync(new URL('../public/styles.css', import.meta.url))).digest('hex').slice(0, 12);
+  assert.ok(html.includes(`/test-repo/styles.css?v=${version}`));
+});
 test('repository subpath reaches every public asset', () => {
   const html = renderPage({ settings, site: 'https://xbased420.github.io', base: '/test-repo/' });
   for (const match of html.matchAll(/(?:href|src)="(\/[^"#]+)"/g)) {

@@ -139,7 +139,7 @@ export function renderPage({ settings, site, base = '/' }) {
               <section id="about" class="terminal-section terminal-view about" aria-labelledby="about-title">
                 <div class="section-command" data-boot><span>C:\\JX_LABS&gt;</span><span>read company_profile.txt</span></div>
                 <div class="about-grid">
-                  <div data-boot><p>ABOUT JX LABS</p><h2 id="about-title">JX Labs</h2><span class="operator-status">WEBSITES / AI / AUTOMATION</span><p class="about-reach">Anyone. Anywhere. Anyplace.</p></div>
+                  <div data-boot><p>ABOUT JX LABS</p><h2 id="about-title">JX Labs</h2><span class="operator-status">WEBSITES / AI / AUTOMATION</span><p class="about-reach">Anyone. Anywhere. Anyplace.</p><p class="about-flexibility">From a simple website to a custom automation, we adapt to your business, your budget, and the way you work—wherever you’re based.</p></div>
                   <div class="about-copy">
                     <p class="lead" data-boot>Creative technology. Within reach.</p>
                     <p data-boot>JX Labs helps businesses look professional online and simplify the work behind the scenes. We bring together creative design, websites, and practical AI tools at affordable prices, with a special focus on local and small businesses. Wherever you are, we’re ready to help.</p>

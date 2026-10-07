@@ -69,7 +69,7 @@
   const info = {
     work: '<h2>Selected work</h2><p>Elizabeth Loya — booking site, in progress</p><p>Payday AJ — artist site, live</p><p>Business Scheduling App — in progress</p>',
     rates: '<h2>Starting rates</h2><ul><li>One-page site: $450</li><li>Full site: $1,200</li><li>Booking add-on: $600</li><li>Maintenance: $125/month</li></ul>',
-    about: '<h2>About Xavier</h2><p>Self-taught builder based in DFW. Restaurant-floor experience shaped the focus: useful tools, clear communication, no agency handoff.</p>'
+    about: '<h2>About JX Labs</h2><p>An independent team building websites and practical automations. Restaurant-floor experience shaped the focus: useful tools, clear communication, no agency handoff.</p>'
   };
   const drawer = document.querySelector('.info-drawer');
   document.querySelectorAll('[data-uplink-info]').forEach(button => button.addEventListener('click', () => {

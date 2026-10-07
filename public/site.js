@@ -1029,7 +1029,7 @@
   const email = ['calipxj', ['gmail', 'com'].join('.')].join('@');
   document.querySelectorAll('.email-link').forEach(link => {
     link.href = `mailto:${email}`;
-    link.setAttribute('aria-label', `Email Xavier at ${email}`);
+    link.setAttribute('aria-label', `Email JX Labs at ${email}`);
   });
 
   const form = document.getElementById('booking-form');
@@ -1044,14 +1044,14 @@
     error.replaceChildren(document.createTextNode(`${message} `));
     const link = document.createElement('a');
     link.href = `mailto:${email}`;
-    link.textContent = 'Email Xavier instead.';
+    link.textContent = 'Email us instead.';
     error.append(link);
     error.hidden = false;
   };
   function validate(field) {
     let message = '';
     const value = field.value.trim();
-    if (field.required && !value) message = { name: 'Tell me your name.', email: 'Add an email I can reply to.', phone: 'Add a phone number where I can reach you.', business: 'Add your business or project name.', needs: 'Tell me a little about what you need.', budget: 'Choose a range, or “Not sure yet”.' }[field.name] || 'Please fill this in.';
+    if (field.required && !value) message = { name: 'Tell us your name.', email: 'Add an email we can reply to.', phone: 'Add a phone number where we can reach you.', business: 'Add your business or project name.', needs: 'Tell us a little about what you need.', budget: 'Choose a range, or “Not sure yet”.' }[field.name] || 'Please fill this in.';
     else if (field.name === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) message = 'Use a complete email, like you@example.com.';
     else if (field.name === 'phone' && value) {
       const digits = value.replace(/\D/g, '');
@@ -1201,7 +1201,7 @@
       success.hidden = false;
       success.focus();
     } catch {
-      fail('I couldn’t confirm the send. Your details are still here. Check your inbox before trying again, or email me.');
+      fail('We couldn’t confirm the send. Your details are still here. Check your inbox before trying again, or email us.');
     } finally {
       clearTimeout(timeout);
       busy = false;

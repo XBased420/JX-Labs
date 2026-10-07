@@ -76,7 +76,7 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(html, /id="sound-toggle"[^>]*aria-pressed="true"/);
   assert.match(html, /class="terminal-button float-signal" href="#booking">Open project request/);
   assert.match(html, /class="contract-link float-signal" href="#booking">START A PROJECT/);
-  assert.match(html, />MY PORTFOLIO</);
+  assert.match(html, />OUR PORTFOLIO</);
   assert.match(html, />SERVICES &amp; ESTIMATE</);
   assert.match(html, />HOW IT WORKS</);
   assert.match(html, />ABOUT JX LABS</);
@@ -95,7 +95,7 @@ test('production shell requires an explicit login and exposes a sequenced boot',
 test('legacy repository paths do not count as visible XBased branding', () => {
   const legacyDeployment = deployment(settings, 'XBased420/XBasedSite');
   const html = renderPage({ settings, ...legacyDeployment });
-  assert.match(html, /src="\/XBasedSite\/site\.js"/);
+  assert.match(html, /src="\/XBasedSite\/site\.js\?v=[a-f0-9]{12}"/);
   assert.match(html, /aria-label="JX Labs home">JX Labs<\/a>/);
   assert.doesNotMatch(html, />\s*XBased\s*</i);
   assert.doesNotMatch(html, /x\[based\]\./i);

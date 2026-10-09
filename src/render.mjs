@@ -5,6 +5,17 @@ import { readFileSync } from 'node:fs';
 
 const stylesheetVersion = createHash('sha256').update(readFileSync('public/styles.css')).digest('hex').slice(0, 12);
 const scriptVersion = createHash('sha256').update(readFileSync('public/site.js')).digest('hex').slice(0, 12);
+const looksVersion = createHash('sha256').update(readFileSync('public/looks.css')).digest('hex').slice(0, 12);
+
+// Selectable site looks. Terminal is the default; the others are opt-in and remembered per browser.
+export const looks = [
+  { id: 'terminal', name: 'Terminal', note: 'Retro computer', theme: '#050905' },
+  { id: 'blueprint', name: 'Blueprint', note: 'Clean and precise', theme: '#f5f7fa' },
+  { id: 'longread', name: 'Long Read', note: 'Editorial', theme: '#f6f6f2' },
+  { id: 'poster', name: 'Poster', note: 'Bold and loud', theme: '#ffd43a' }
+];
+const lookBoot = `(function(d){d.classList.add('js');var t=${JSON.stringify(Object.fromEntries(looks.map(look => [look.id, look.theme])))},l='terminal';try{var s=localStorage.getItem('jx-look');if(s&&s!=='terminal'&&t[s])l=s}catch(e){}d.setAttribute('data-look',l);if(l!=='terminal')d.classList.add('look-alt');var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t[l])})(document.documentElement)`;
+const lookSwitch = () => `<div class="look-switch" id="look-switch"><button class="look-button" id="look-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="look-menu"><span class="look-label">Try another look</span><span class="look-current" id="look-current">Terminal</span><span class="look-caret" aria-hidden="true"></span></button><div class="look-menu" id="look-menu" role="menu" aria-labelledby="look-button" hidden>${looks.map(look => `<button type="button" role="menuitemradio" aria-checked="${look.id === 'terminal'}" tabindex="-1" data-look-option="${look.id}" data-theme-color="${look.theme}"><i class="look-swatch look-swatch-${look.id}" aria-hidden="true"></i><span>${escape(look.name)}</span><small>${escape(look.note)}</small></button>`).join('')}</div><span class="visually-hidden" id="look-status" role="status"></span></div>`;
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 
@@ -38,7 +49,7 @@ export function renderPage({ settings, site, base = '/' }) {
   <title>JX Labs — Websites &amp; booking systems</title><meta name="description" content="JX Labs builds websites and booking systems for small businesses, barbers, DJs, and artists in Dallas, Carrollton, and across DFW. Start a project.">
   ${!settings.launchReady ? '<meta name="robots" content="noindex, nofollow">' : ''}<link rel="canonical" href="${escape(canonical)}"><meta name="theme-color" content="#050905">
   <meta property="og:type" content="website"><meta property="og:title" content="JX Labs — Websites that pull their weight."><meta property="og:description" content="Websites and booking systems, built by JX Labs."><meta property="og:url" content="${escape(canonical)}"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="JX Labs — Websites that pull their weight"><meta name="twitter:description" content="Websites and booking systems for businesses and creatives.">
-  <link rel="icon" type="image/svg+xml" href="${asset('favicon.svg')}"><link rel="preload" href="${asset('assets/fonts/space-grotesk-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('assets/fonts/manrope-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="${asset(`styles.css?v=${stylesheetVersion}`)}"><script>document.documentElement.classList.add('js')</script><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head>
+  <link rel="icon" type="image/svg+xml" href="${asset('favicon.svg')}"><link rel="preload" href="${asset('assets/fonts/space-grotesk-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('assets/fonts/manrope-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="${asset(`styles.css?v=${stylesheetVersion}`)}"><link rel="stylesheet" href="${asset(`looks.css?v=${looksVersion}`)}"><script>${lookBoot}</script><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head>
   <body class="terminal-locked">
     <div class="login-screen" id="login-screen" role="dialog" aria-modal="true" aria-labelledby="login-title">
       <div class="login-housing">
@@ -67,7 +78,9 @@ export function renderPage({ settings, site, base = '/' }) {
             <span class="system-title">JX LABS PUBLIC SERVICE TERMINAL</span>
             <span class="status"><i></i> AVAILABLE FOR NEW WORK</span>
             <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="true">SOUND: ON</button>
-            <span class="clock" id="terminal-clock">00:00:00</span>
+            ${lookSwitch()}
+            <span class="clock" id="terminal-clock" aria-hidden="true">00:00:00</span>
+            <div class="look-marquee" aria-hidden="true"><div>${[0, 1].map(() => services.map(([name]) => `<span>${escape(name)}</span><i>★</i>`).join('')).join('')}</div></div>
           </header>
           <div class="console-grid">
             <nav class="directory" aria-label="Main navigation" data-boot>
@@ -87,7 +100,8 @@ export function renderPage({ settings, site, base = '/' }) {
 
             <main id="main" class="console-content" tabindex="-1">
               <section id="home" class="hero terminal-view active" aria-labelledby="hero-title">
-                <p class="boot-line" data-boot>COMPANY TERMINAL ONLINE // TEAM: JX LABS</p>
+                <p class="boot-line" data-boot><span class="terminal-only">COMPANY TERMINAL ONLINE // TEAM: JX LABS</span><span class="look-only">WEBSITES / AI / AUTOMATION</span></p>
+                <span class="look-sticker" aria-hidden="true"><span>DFW<br>&amp; beyond</span></span>
                 <h1 id="hero-title" data-boot>Websites that pull their weight.</h1>
                 <p class="hero-copy" data-boot>We build sites, booking systems, and practical automations for small businesses and creatives in DFW and beyond.</p>
                 <div class="prompt-line" aria-hidden="true" data-boot><span>&gt;</span><span>run start_project.exe</span><b></b></div>
@@ -99,7 +113,7 @@ export function renderPage({ settings, site, base = '/' }) {
                 <div class="section-command" data-boot><span>C:\\JX_LABS&gt;</span><span>open portfolio.dir</span></div>
                 <header class="section-head" data-boot><div><p>OUR PORTFOLIO</p><h2 id="work-title">Websites and systems built around real problems.</h2></div><p>Client work, active builds, and useful experiments—each with the problem, approach, and current status made clear.</p></header>
                 <div class="projects">
-                  ${projects.map((project, index) => `<details class="project" data-boot><summary><span class="record-number">${String(index + 1).padStart(2, '0')}</span><div><span class="project-category">${escape(project.category)}</span><h3>${escape(project.name)}</h3><p>${escape(project.line)}</p></div><span class="badge ${project.status === 'LIVE' ? 'live' : ''}">${escape(project.status)}</span><span class="expand-icon" aria-hidden="true">+</span></summary><div class="case-content"><div class="case-columns"><div><h4>THE PROBLEM</h4><p>${escape(project.problem)}</p></div><div><h4>WHAT WE BUILT</h4><p>${escape(project.built)}</p></div></div><h4>TOOLS</h4><div class="chips">${project.stack.map(tool => `<span>${escape(tool)}</span>`).join('')}</div>${project.stackPending ? `<p class="placeholder">${escape(project.stackPending)}</p>` : ''}${project.screenshot ? `<img src="${asset(project.screenshot)}" alt="${escape(project.name)} website screenshot" width="1600" height="1000" loading="lazy" decoding="async">` : `<div class="screenshot-slot"><span>PROJECT IMAGE PENDING</span><p>[[NEEDS JX LABS: screenshot — ${escape(project.name)}]]</p></div>`}${project.url ? `<a class="text-link" href="${escape(project.url)}" target="_blank" rel="noopener noreferrer">Visit live site ↗</a>` : ''}</div></details>`).join('')}
+                  ${projects.map((project, index) => `<details class="project" data-boot><summary><span class="record-number">${String(index + 1).padStart(2, '0')}</span><div><span class="project-category">${escape(project.category)}</span><h3>${escape(project.name)}</h3><p>${escape(project.line)}</p></div><span class="badge ${project.status === 'LIVE' ? 'live' : ''}">${escape(project.status)}</span><span class="expand-icon" aria-hidden="true">+</span></summary><div class="case-content"><div class="case-columns"><div><h4>THE PROBLEM</h4><p>${escape(project.problem)}</p></div><div><h4>WHAT WE BUILT</h4><p>${escape(project.built)}</p></div></div>${project.stack.length ? `<h4>TOOLS</h4><div class="chips">${project.stack.map(tool => `<span>${escape(tool)}</span>`).join('')}</div>` : ''}${project.screenshot ? `<img src="${asset(project.screenshot)}" alt="${escape(project.name)} website screenshot" width="1600" height="1000" loading="lazy" decoding="async">` : ''}${project.url ? `<a class="text-link" href="${escape(project.url)}" target="_blank" rel="noopener noreferrer">Visit live site ↗</a>` : ''}</div></details>`).join('')}
                 </div>
                 <aside class="concept-invite" data-boot><div><span>NEW / INTERACTIVE CONCEPTS</span><h3>Six industries. Six working systems.</h3><p>Step inside fictional businesses spanning hospitality, retail, field service, healthcare, and logistics.</p></div><a class="terminal-button" href="#concepts">Enter concept lab</a></aside>
               </section>

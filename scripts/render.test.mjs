@@ -211,3 +211,38 @@ test('terminal design lab is a safe three-concept prototype', () => {
   assert.match(readFileSync(new URL('../public/terminal-lab.css', import.meta.url), 'utf8'), /prefers-reduced-motion:reduce/);
   assert.match(previewServer, /'\.html': 'text\/html; charset=utf-8'/);
 });
+test('look switcher offers four looks, restores before paint, and keeps Terminal as the default', () => {
+  const html = renderPage({ settings, ...deployment(settings) });
+  const behavior = readFileSync(new URL('../public/site.js', import.meta.url), 'utf8');
+  const looksCss = readFileSync(new URL('../public/looks.css', import.meta.url), 'utf8');
+  const version = createHash('sha256').update(looksCss).digest('hex').slice(0, 12);
+  assert.ok(html.includes(`looks.css?v=${version}`));
+  const head = html.slice(0, html.indexOf('</head>'));
+  assert.match(head, /localStorage\.getItem\('jx-look'\)/);
+  assert.match(head, /l='terminal'/);
+  assert.ok(head.indexOf('looks.css') < head.indexOf("getItem('jx-look')"));
+  assert.match(html, /id="look-button"[^>]*aria-haspopup="menu"[^>]*aria-expanded="false"[^>]*aria-controls="look-menu"/);
+  assert.match(html, /id="look-menu" role="menu"[^>]*hidden/);
+  assert.equal((html.match(/role="menuitemradio"/g) || []).length, 4);
+  for (const look of ['terminal', 'blueprint', 'longread', 'poster']) assert.match(html, new RegExp(`data-look-option="${look}"`));
+  assert.match(html, /aria-checked="true" tabindex="-1" data-look-option="terminal"/);
+  assert.equal((html.match(/aria-checked="true"/g) || []).length, 1);
+  assert.match(behavior, /localStorage\.setItem\('jx-look', next\)/);
+  assert.match(behavior, /runBoot\(view, false, \{ focus: false \}\)/);
+  assert.match(looksCss, /prefers-reduced-motion:reduce/);
+  for (const look of ['blueprint', 'longread', 'poster']) assert.match(looksCss, new RegExp(`\\[data-look="${look}"\\]\\{--reactor`));
+  for (const name of ['public-sans', 'jetbrains-mono', 'newsreader', 'newsreader-latin-italic', 'libre-franklin', 'anton', 'archivo']) {
+    const file = name.endsWith('italic') ? name : `${name}-latin`;
+    assert.equal(readFileSync(new URL(`../public/assets/fonts/${file}.woff2`, import.meta.url)).subarray(0, 4).toString(), 'wOF2');
+  }
+});
+test('portfolio shows no internal placeholders to visitors', () => {
+  const html = renderPage({ settings, ...deployment(settings) });
+  assert.doesNotMatch(html, /\[\[NEEDS/);
+  assert.doesNotMatch(html, /PROJECT IMAGE PENDING/);
+});
+test('concept demos are isolated from site looks and CRT effects', () => {
+  const styles = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.concept-stage\{position:relative;z-index:31\}/);
+  assert.match(styles, /\.concept-frame\{text-shadow:none;--reactor/);
+});

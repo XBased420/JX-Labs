@@ -244,3 +244,22 @@
   .relay-load-detail{min-width:0;padding:2rem 1rem}
   .relay-load-detail h3{font-size:2.5rem}
 }
+
+/* Top bar layout, look switch spacing, and site-wide fixes (October 2026) */
+.system-bar{display:flex;flex-wrap:nowrap}.system-title{margin-right:auto}
+@media(max-width:1050px){.system-bar{display:flex}.system-bar .status{margin-right:auto}}
+/* Concept Lab demos keep their own brands: no CRT scanlines or glow on top, and shared tokens reset to the originals. */
+.concept-stage{position:relative;z-index:31}
+.concept-frame{text-shadow:none;--reactor:#040704;--glass:#071007;--glass-light:#0c1b0d;--phosphor:#9be892;--phosphor-soft:#91ce8d;--dim:#72a875;--amber:#f3b85b;--error:#ff826f;--mono:'Cascadia Code','SFMono-Regular',Consolas,monospace;--sans:Manrope,Arial,sans-serif;--stamp:'Space Grotesk',Arial,sans-serif}
+/* Phone navigation: one readable, swipeable row instead of tiny stacked labels. */
+@media(max-width:720px){
+  .system-bar{gap:.6rem;padding:.55rem .75rem}.system-bar .status{font-size:.58rem}.sound-toggle{font-size:.58rem;min-height:38px}
+  .directory{z-index:40;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:.35rem;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;padding:.5rem .65rem}
+  .directory::-webkit-scrollbar{display:none}
+  .directory>a{flex:none;display:flex;align-items:center;min-height:44px;padding:.6rem .85rem;font-size:.78rem;white-space:nowrap;scroll-snap-align:center}
+  .directory>a:before,.directory>a.active:before,.directory>a:hover:before{content:none}
+  .directory>a.active{box-shadow:inset 0 -2px 0 var(--phosphor)}
+  .directory .contract-link{margin:0}
+}
+@media(max-width:520px){.system-bar .status{display:none}}
+@media(max-width:420px){.directory>a{font-size:.76rem}}

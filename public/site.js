@@ -3,6 +3,11 @@
 
   const config = JSON.parse(document.getElementById('site-config').textContent);
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const root = document.documentElement;
+  const looks = ['terminal', 'blueprint', 'longread', 'poster'];
+  let look = looks.includes(root.dataset.look) ? root.dataset.look : 'terminal';
+  // Remember where the visitor was headed (a refresh or shared #link) so login can take them there.
+  const initialView = location.hash.slice(1);
   const app = document.getElementById('terminal-app');
   const login = document.getElementById('login-screen');
   const loginButton = document.getElementById('terminal-login');
@@ -71,7 +76,30 @@
     gain.connect(audioContext.destination);
     source.start(start);
   };
-  const playBootChime = () => {
+  const noiseSweep = (duration, volume, delay, fromFrequency, toFrequency, q = 1, filterType = 'bandpass') => {
+    if (!soundEnabled || !ensureAudio()) return;
+    const sampleCount = Math.max(1, Math.floor(audioContext.sampleRate * duration));
+    const buffer = audioContext.createBuffer(1, sampleCount, audioContext.sampleRate);
+    const channel = buffer.getChannelData(0);
+    for (let index = 0; index < sampleCount; index += 1) channel[index] = Math.random() * 2 - 1;
+    const source = audioContext.createBufferSource();
+    const filter = audioContext.createBiquadFilter();
+    const gain = audioContext.createGain();
+    const start = audioContext.currentTime + delay;
+    source.buffer = buffer;
+    filter.type = filterType;
+    filter.Q.setValueAtTime(q, start);
+    filter.frequency.setValueAtTime(fromFrequency, start);
+    filter.frequency.exponentialRampToValueAtTime(toFrequency, start + duration);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(volume, start + duration * .35);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioContext.destination);
+    source.start(start);
+  };
+  const terminalBootChime = () => {
     tone(118, 56, .34, .012, 0, 'sawtooth', 720, -11);
     tone(121, 58, .34, .009, 0, 'sawtooth', 680, 13);
     noiseClick(.075, .007, .025, 920, 'bandpass');
@@ -80,21 +108,98 @@
     tone(272, 1170, .19, .005, .18, 'sawtooth', 1500, 9);
     noiseClick(.045, .0045, .32, 3400, 'highpass');
   };
-  const playPageOpen = () => {
+  const terminalPageOpen = () => {
     tone(860, 310, .075, .0081, 0, 'square', 1500);
     noiseClick(.035, .005, .018, 1250, 'bandpass');
     tone(185, 690, .11, .0069, .075, 'sawtooth', 980, -9);
   };
-  const playEstimateTick = () => {
+  const terminalEstimateTick = () => {
     tone(1080, 680, .055, .0055, 0, 'square', 1800, 7);
     noiseClick(.018, .0035, .012, 2400, 'highpass');
   };
-  const playKeyTick = index => {
+  const terminalKeyTick = index => {
     const base = 720 + (index % 5) * 83;
     tone(base, base * .58, .025, .0038, 0, index % 2 ? 'square' : 'sawtooth', 1700, index % 2 ? -8 : 7);
     noiseClick(.013, .0022, 0, 1750 + (index % 4) * 260, 'bandpass');
     if (index % 4 === 0) tone(148, 96, .055, .0035, .012, 'triangle', 520);
   };
+  // Each look has its own small sound palette, built from the same synth helpers.
+  const soundsFor = {
+    terminal: { boot: terminalBootChime, page: terminalPageOpen, estimate: terminalEstimateTick, key: terminalKeyTick },
+    blueprint: {
+      // Drafting room: clean sine pings, a ruler snap, and quiet plotter ticks.
+      boot: () => {
+        [523.25, 659.25, 783.99, 1046.5].forEach((frequency, step) => tone(frequency, frequency * 1.002, .34, .0085, step * .085, 'sine'));
+        noiseClick(.02, .003, .38, 4200, 'highpass');
+      },
+      page: () => {
+        tone(1318.5, 1318.5, .16, .006, 0, 'sine');
+        tone(1975.5, 1975.5, .22, .004, .06, 'sine');
+        noiseSweep(.12, .0035, 0, 1800, 5200, .8);
+      },
+      estimate: () => {
+        noiseClick(.012, .0045, 0, 3600, 'bandpass');
+        noiseClick(.012, .0035, .045, 2600, 'bandpass');
+        tone(1760, 1760, .07, .0035, .04, 'sine');
+      },
+      key: index => {
+        const frequency = index % 2 ? 2349 : 2093;
+        tone(frequency, frequency * .98, .03, .0022, 0, 'triangle');
+        noiseClick(.008, .0018, 0, 5200, 'highpass');
+      }
+    },
+    longread: {
+      // Paper and ink: a page turn, a pencil tap, and a pen scratching across the sheet.
+      boot: () => {
+        noiseSweep(.5, .006, 0, 500, 2600, .7);
+        tone(261.63, 261.2, .9, .006, .18, 'triangle', 1200);
+        tone(392, 391.4, .9, .0045, .26, 'triangle', 1200);
+      },
+      page: () => {
+        noiseSweep(.34, .0065, 0, 700, 3400, .6);
+        noiseSweep(.18, .003, .16, 2400, 900, .9);
+      },
+      estimate: () => {
+        noiseClick(.016, .004, 0, 2600, 'bandpass');
+        tone(196, 170, .05, .004, .004, 'triangle', 900);
+      },
+      key: index => noiseClick(.03 + (index % 3) * .01, .0016, 0, 3600 + (index % 4) * 400, 'bandpass'),
+      scribble: (duration, delay) => {
+        const strokes = Math.max(2, Math.round(duration / .07));
+        for (let stroke = 0; stroke < strokes; stroke += 1) noiseClick(.045, .0021, delay + stroke * duration / strokes, 3000 + Math.random() * 1800, 'bandpass');
+      }
+    },
+    poster: {
+      // Print shop: rubber-stamp thumps, bright pops, and a ta-da.
+      boot: () => {
+        [0, .13, .26].forEach(delay => {
+          tone(150, 46, .2, .022, delay, 'sine');
+          noiseClick(.05, .006, delay, 900, 'lowpass');
+        });
+        tone(420, 1260, .22, .009, .42, 'triangle', 2400);
+        tone(630, 1890, .22, .006, .46, 'square', 2200);
+      },
+      page: () => {
+        tone(160, 48, .2, .02, 0, 'sine');
+        noiseClick(.06, .0065, 0, 800, 'lowpass');
+        tone(880, 1320, .06, .004, .05, 'square', 2400);
+      },
+      estimate: () => {
+        tone(520, 1180, .07, .008, 0, 'sine');
+        noiseClick(.02, .003, 0, 2400, 'highpass');
+      },
+      key: index => {
+        const frequency = [392, 494, 587, 659, 784][index % 5];
+        tone(frequency, frequency * 1.6, .06, .0055, 0, 'sine');
+        if (index % 3 === 0) tone(130, 60, .09, .009, 0, 'sine');
+      }
+    }
+  };
+  const sounds = () => soundsFor[look] || soundsFor.terminal;
+  const playBootChime = () => sounds().boot();
+  const playPageOpen = () => sounds().page();
+  const playEstimateTick = () => sounds().estimate();
+  const playKeyTick = index => sounds().key(index);
 
   if (!AudioContextClass) {
     soundEnabled = false;
@@ -119,12 +224,78 @@
     document.querySelectorAll('.boot-sequence').forEach(scope => scope.classList.remove('boot-sequence'));
     document.querySelectorAll('[data-boot].is-live').forEach(item => item.classList.remove('is-live'));
   };
-  const runBoot = (view, includeChrome = false) => {
+  // Long Read: headings are written word by word, with a pen nib following the ink.
+  const inkTargets = scope => [...scope.querySelectorAll('#hero-title, .section-head h2, .about-grid h2, .booking-intro h2, #login-title')];
+  const wrapInk = heading => {
+    if (heading.dataset.inked) return;
+    const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach(node => {
+      const fragment = document.createDocumentFragment();
+      node.textContent.split(/(\s+)/).forEach(part => {
+        if (!part) return;
+        if (/^\s+$/.test(part)) fragment.append(part);
+        else {
+          const word = document.createElement('span');
+          word.className = 'ink-word';
+          word.textContent = part;
+          fragment.append(word);
+        }
+      });
+      node.replaceWith(fragment);
+    });
+    if (heading.id === 'hero-title') [...heading.querySelectorAll('.ink-word')].slice(-3).forEach(word => word.classList.add('ink-mark'));
+    heading.dataset.inked = 'true';
+  };
+  const nibMarkup = '<svg viewBox="0 0 26 26" aria-hidden="true"><path d="M3 23 9.5 16.5" stroke="#141413" stroke-width="1.6" stroke-linecap="round"/><path d="M9 17 21 5l1.8 1.8-12 12-3.4 1.6z" fill="#1c5a3a" stroke="#141413" stroke-width="1.2" stroke-linejoin="round"/><circle cx="3" cy="23" r="1.2" fill="#141413"/></svg>';
+  const writeHeading = (heading, startDelay, { silent = false } = {}) => {
+    wrapInk(heading);
+    const words = [...heading.querySelectorAll('.ink-word')];
+    if (!words.length) return;
+    const plan = [];
+    let time = startDelay;
+    words.forEach(word => {
+      const duration = Math.min(560, 90 + word.textContent.length * 42);
+      word.style.setProperty('--ink-delay', `${time}ms`);
+      word.style.setProperty('--ink-dur', `${duration}ms`);
+      if (word.classList.contains('ink-mark')) word.style.setProperty('--mark-delay', `${time + duration}ms`);
+      plan.push({ word, start: time, duration });
+      time += duration * .82;
+    });
+    heading.classList.remove('is-writing');
+    void heading.offsetWidth;
+    heading.classList.add('is-writing');
+    if (!silent && soundEnabled) plan.forEach(step => soundsFor.longread.scribble(step.duration / 1000, step.start / 1000));
+    const end = plan.at(-1).start + plan.at(-1).duration;
+    const span = Math.max(1, end - startDelay);
+    const nib = document.createElement('span');
+    nib.className = 'ink-nib';
+    nib.setAttribute('aria-hidden', 'true');
+    nib.innerHTML = nibMarkup;
+    heading.append(nib);
+    const frames = [];
+    plan.forEach(({ word, start, duration }) => {
+      const y = word.offsetTop + word.offsetHeight * .78;
+      frames.push({ transform: `translate(${word.offsetLeft}px, ${y}px)`, opacity: 1, offset: Math.min(1, (start - startDelay) / span) });
+      frames.push({ transform: `translate(${word.offsetLeft + word.offsetWidth}px, ${y}px)`, opacity: 1, offset: Math.min(1, (start + duration - startDelay) / span) });
+    });
+    frames[0].opacity = 0;
+    frames.push({ ...frames.at(-1), opacity: 0, offset: 1 });
+    frames.forEach((frame, index) => { if (index && frame.offset < frames[index - 1].offset) frame.offset = frames[index - 1].offset; });
+    try {
+      const animation = nib.animate(frames, { duration: span + 160, delay: startDelay, fill: 'both', easing: 'linear' });
+      animation.onfinish = () => nib.remove();
+    } catch { nib.remove(); }
+  };
+
+  const runBoot = (view, includeChrome = false, { focus = true } = {}) => {
     clearBoot();
+    document.querySelectorAll('.ink-nib').forEach(nib => nib.remove());
     if (motion.matches) {
       app.classList.add('terminal-ready');
       view.tabIndex = -1;
-      view.focus({ preventScroll: true });
+      if (focus) view.focus({ preventScroll: true });
       return;
     }
     const chromeItems = [
@@ -146,13 +317,17 @@
         playKeyTick(index);
       }, 170 + index * 72));
     });
+    if (look === 'longread') inkTargets(view).forEach(heading => {
+      const host = heading.closest('[data-boot]');
+      writeHeading(heading, 210 + Math.max(0, items.indexOf(host)) * 72);
+    });
     bootTimers.push(window.setTimeout(() => {
       scope.classList.remove('boot-sequence');
       items.forEach(item => item.classList.remove('is-live'));
       app.classList.add('terminal-ready');
       app.classList.remove('booting');
       view.tabIndex = -1;
-      view.focus({ preventScroll: true });
+      if (focus) view.focus({ preventScroll: true });
     }, 300 + items.length * 72));
   };
 
@@ -164,7 +339,17 @@
       view.hidden = !active;
       view.setAttribute('aria-hidden', String(!active));
     });
-    directoryLinks.forEach(link => link.classList.toggle('active', link.hash === `#${target.id}`));
+    directoryLinks.forEach(link => {
+      const current = link.hash === `#${target.id}`;
+      link.classList.toggle('active', current);
+      if (current) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    const activeLink = directoryLinks.find(link => link.classList.contains('active'));
+    const directory = activeLink?.parentElement;
+    if (directory && directory.scrollWidth > directory.clientWidth) {
+      directory.scrollTo({ left: Math.max(0, activeLink.offsetLeft - (directory.clientWidth - activeLink.offsetWidth) / 2), behavior: motion.matches ? 'instant' : 'smooth' });
+    }
     window.scrollTo({ top: 0, behavior: 'instant' });
     if (historyMode === 'push') history.pushState(null, '', `#${target.id}`);
     if (historyMode === 'replace') history.replaceState(null, '', `#${target.id}`);
@@ -178,7 +363,8 @@
     app.style.visibility = 'visible';
     app.inert = false;
     app.removeAttribute('aria-hidden');
-    activateView('home', { boot: true, historyMode: 'replace', includeChrome: true });
+    const startView = terminalViews.some(view => view.id === initialView) ? initialView : 'home';
+    activateView(startView, { boot: true, historyMode: 'replace', includeChrome: true });
   };
 
   loginButton.addEventListener('click', () => {
@@ -193,9 +379,24 @@
   });
 
   const clock = document.getElementById('terminal-clock');
-  const updateClock = () => { clock.textContent = new Date().toLocaleTimeString('en-US', { hour12: false }); };
+  const dateline = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const pad = value => String(Math.max(0, Math.round(value))).padStart(4, '0');
+  const updateClock = () => {
+    if (look === 'longread') clock.textContent = dateline.format(new Date());
+    else if (look === 'blueprint') { if (!clock.dataset.coords) clock.textContent = 'X 0000 · Y 0000'; }
+    else clock.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+  };
   updateClock();
   window.setInterval(updateClock, 1000);
+  let pointerFrame = 0;
+  window.addEventListener('pointermove', event => {
+    if (look !== 'blueprint' || pointerFrame) return;
+    pointerFrame = requestAnimationFrame(() => {
+      pointerFrame = 0;
+      clock.dataset.coords = 'true';
+      clock.textContent = `X ${pad(event.clientX)} · Y ${pad(event.clientY + window.scrollY)}`;
+    });
+  }, { passive: true });
 
   const conceptCatalog = document.getElementById('concept-catalog');
   const conceptViewer = document.getElementById('concept-viewer');
@@ -696,12 +897,20 @@
     updateRelayTracking();
     conceptToast.hidden = true;
   };
+  function setConceptDevice(device) {
+    conceptFrame.classList.toggle('is-phone', device === 'phone');
+    document.querySelectorAll('[data-concept-device]').forEach(option => {
+      const selected = option.dataset.conceptDevice === device;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+  }
   const showConceptCatalog = ({ focus = false } = {}) => {
     activeConcept = null;
     setEventPlaying(false);
     conceptViewer.hidden = true;
     conceptCatalog.hidden = false;
-    conceptFrame.classList.remove('is-phone');
+    setConceptDevice('desktop');
     window.scrollTo({ top: 0, behavior: 'instant' });
     if (focus) document.getElementById('concepts-title').focus({ preventScroll: true });
   };
@@ -727,13 +936,7 @@
     announceConcept('Concept restarted.');
   });
   document.querySelectorAll('[data-concept-device]').forEach(button => button.addEventListener('click', () => {
-    const phone = button.dataset.conceptDevice === 'phone';
-    conceptFrame.classList.toggle('is-phone', phone);
-    document.querySelectorAll('[data-concept-device]').forEach(option => {
-      const selected = option === button;
-      option.classList.toggle('active', selected);
-      option.setAttribute('aria-pressed', String(selected));
-    });
+    setConceptDevice(button.dataset.conceptDevice);
     conceptFrame.scrollTo({ top: 0, behavior: 'instant' });
   }));
   document.querySelectorAll('[data-concept-scroll]').forEach(button => button.addEventListener('click', () => {
@@ -1076,6 +1279,9 @@
   const budget = document.getElementById('budget');
   const currency = value => `$${Math.round(value).toLocaleString('en-US')}`;
   let estimateState = { selected: [], oneTime: 0, monthly: 0, custom: false, summary: '' };
+  const estimateStatusText = ready => look === 'terminal'
+    ? (ready ? 'SIGNAL ACQUIRED // ESTIMATE READY' : 'AWAITING SITE FOUNDATION')
+    : (ready ? 'ESTIMATE READY' : 'WAITING FOR A SITE TYPE');
 
   const updateEstimate = ({ playSound = true } = {}) => {
     const selected = estimateInputs.filter(input => input.checked);
@@ -1087,7 +1293,7 @@
     let summary = '';
 
     if (!foundation) {
-      estimateStatus.textContent = 'AWAITING SITE FOUNDATION';
+      estimateStatus.textContent = estimateStatusText(false);
       estimateTotal.textContent = 'Choose a site type';
       estimateDeposit.textContent = 'Your estimated deposit will appear here.';
       estimateCustom.hidden = true;
@@ -1098,7 +1304,7 @@
       if (monthly) parts.push(`${currency(monthly)}/mo`);
       if (custom) parts.push('custom scope');
       summary = parts.length ? parts.join(' + ') : 'Custom estimate after review';
-      estimateStatus.textContent = 'SIGNAL ACQUIRED // ESTIMATE READY';
+      estimateStatus.textContent = estimateStatusText(true);
       estimateTotal.textContent = summary;
       estimateDeposit.textContent = oneTime && depositRate
         ? `${depositRate}% estimated deposit: ${currency(oneTime * depositRate / 100)}`
@@ -1223,6 +1429,80 @@
     form.hidden = false;
     fields[0].focus();
   });
+
+  // "Try another look": swaps the whole site's design in place. Content, forms, estimator choices,
+  // open portfolio entries, the current section, and the URL all stay exactly as they are.
+  const lookButton = document.getElementById('look-button');
+  const lookMenu = document.getElementById('look-menu');
+  const lookOptions = [...lookMenu.querySelectorAll('[data-look-option]')];
+  const lookCurrent = document.getElementById('look-current');
+  const lookStatus = document.getElementById('look-status');
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const applyLook = (next, { remember = false, animate = false } = {}) => {
+    if (!looks.includes(next)) next = 'terminal';
+    const changed = next !== look;
+    look = next;
+    root.dataset.look = next;
+    root.classList.toggle('look-alt', next !== 'terminal');
+    const option = lookOptions.find(item => item.dataset.lookOption === next);
+    lookOptions.forEach(item => item.setAttribute('aria-checked', String(item === option)));
+    const name = option.querySelector('span').textContent;
+    lookCurrent.textContent = name;
+    themeMeta?.setAttribute('content', option.dataset.themeColor);
+    delete clock.dataset.coords;
+    updateClock();
+    estimateStatus.textContent = estimateStatusText(Boolean(estimateState.selected.some(input => input.name === 'site-foundation')));
+    document.querySelectorAll('.ink-nib').forEach(nib => nib.remove());
+    if (remember) {
+      try { localStorage.setItem('jx-look', next); } catch { /* Private browsing: the look still applies for this visit. */ }
+    }
+    if (!changed) return;
+    lookStatus.textContent = `${name} look applied.`;
+    if (animate) {
+      playPageOpen();
+      const view = terminalViews.find(item => item.classList.contains('active'));
+      if (view && !document.body.classList.contains('terminal-locked')) runBoot(view, false, { focus: false });
+    }
+  };
+  const closeLookMenu = ({ refocus = true } = {}) => {
+    if (lookMenu.hidden) return;
+    lookMenu.hidden = true;
+    lookButton.setAttribute('aria-expanded', 'false');
+    if (refocus) lookButton.focus({ preventScroll: true });
+  };
+  const openLookMenu = (focusLast = false) => {
+    lookMenu.hidden = false;
+    lookButton.setAttribute('aria-expanded', 'true');
+    const checked = lookOptions.find(item => item.getAttribute('aria-checked') === 'true');
+    (focusLast ? lookOptions.at(-1) : checked || lookOptions[0]).focus({ preventScroll: true });
+  };
+  lookButton.addEventListener('click', () => (lookMenu.hidden ? openLookMenu() : closeLookMenu()));
+  lookButton.addEventListener('keydown', event => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      openLookMenu(event.key === 'ArrowUp');
+    }
+  });
+  lookMenu.addEventListener('keydown', event => {
+    const index = lookOptions.indexOf(document.activeElement);
+    const move = target => { event.preventDefault(); lookOptions[(target + lookOptions.length) % lookOptions.length].focus({ preventScroll: true }); };
+    if (event.key === 'ArrowDown') move(index + 1);
+    else if (event.key === 'ArrowUp') move(index - 1);
+    else if (event.key === 'Home') move(0);
+    else if (event.key === 'End') move(lookOptions.length - 1);
+    else if (event.key === 'Escape') { event.preventDefault(); closeLookMenu(); }
+    else if (event.key === 'Tab') closeLookMenu({ refocus: false });
+  });
+  lookOptions.forEach(option => option.addEventListener('click', () => {
+    applyLook(option.dataset.lookOption, { remember: true, animate: true });
+    closeLookMenu();
+  }));
+  document.addEventListener('click', event => {
+    if (!lookMenu.hidden && !event.target.closest('#look-switch')) closeLookMenu({ refocus: false });
+  });
+  applyLook(look);
+  const loginTitle = document.getElementById('login-title');
+  if (look === 'longread' && !motion.matches && !login.hidden) writeHeading(loginTitle, 380, { silent: true });
 
   if (config.analyticsToken) {
     const script = document.createElement('script');

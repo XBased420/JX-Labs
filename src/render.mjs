@@ -7,14 +7,14 @@ const stylesheetVersion = createHash('sha256').update(readFileSync('public/style
 const scriptVersion = createHash('sha256').update(readFileSync('public/site.js')).digest('hex').slice(0, 12);
 const looksVersion = createHash('sha256').update(readFileSync('public/looks.css')).digest('hex').slice(0, 12);
 
-// Selectable site looks. Terminal is the default; the others are opt-in and remembered per browser.
+// Selectable site looks. Each page load shuffles to a random look, never the same one twice in a row.
 export const looks = [
   { id: 'terminal', name: 'Terminal', note: 'Retro computer', theme: '#050905' },
   { id: 'blueprint', name: 'Blueprint', note: 'Clean and precise', theme: '#f5f7fa' },
   { id: 'longread', name: 'Long Read', note: 'Editorial', theme: '#f6f6f2' },
   { id: 'poster', name: 'Poster', note: 'Bold and loud', theme: '#ffd43a' }
 ];
-const lookBoot = `(function(d){d.classList.add('js');var t=${JSON.stringify(Object.fromEntries(looks.map(look => [look.id, look.theme])))},l='terminal';try{var s=localStorage.getItem('jx-look');if(s&&s!=='terminal'&&t[s])l=s}catch(e){}d.setAttribute('data-look',l);if(l!=='terminal')d.classList.add('look-alt');var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t[l])})(document.documentElement)`;
+const lookBoot = `(function(d){d.classList.add('js');var t=${JSON.stringify(Object.fromEntries(looks.map(look => [look.id, look.theme])))},ids=${JSON.stringify(looks.map(look => look.id))},last=null;try{last=localStorage.getItem('jx-look-last');localStorage.removeItem('jx-look')}catch(e){}var pool=ids.filter(function(id){return id!==last}),l=pool[Math.floor(Math.random()*pool.length)]||'terminal';try{localStorage.setItem('jx-look-last',l)}catch(e){}d.setAttribute('data-look',l);if(l!=='terminal')d.classList.add('look-alt');var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t[l])})(document.documentElement)`;
 const lookSwitch = () => `<div class="look-switch" id="look-switch"><button class="look-button" id="look-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="look-menu"><span class="look-label">Try another look</span><span class="look-current" id="look-current">Terminal</span><span class="look-caret" aria-hidden="true"></span></button><div class="look-menu" id="look-menu" role="menu" aria-labelledby="look-button" hidden>${looks.map(look => `<button type="button" role="menuitemradio" aria-checked="${look.id === 'terminal'}" tabindex="-1" data-look-option="${look.id}" data-theme-color="${look.theme}"><i class="look-swatch look-swatch-${look.id}" aria-hidden="true"></i><span>${escape(look.name)}</span><small>${escape(look.note)}</small></button>`).join('')}</div><span class="visually-hidden" id="look-status" role="status"></span></div>`;
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
@@ -55,14 +55,26 @@ export function renderPage({ settings, site, base = '/' }) {
       <div class="login-housing">
         <p class="hardware-stamp">JX–77 / CIVIC INFORMATION SYSTEM</p>
         <div class="login-glass crt">
-          <div class="login-status"><span>JX LABS NETWORK ACCESS</span><span>NODE: DFW–TX</span></div>
+          <div class="login-status"><span class="terminal-only">JX LABS NETWORK ACCESS</span><span class="terminal-only">NODE: DFW–TX</span><span data-look-only="blueprint">JX LABS · DRAWING SET 2026</span><span data-look-only="blueprint">SHEET A-01 OF 07</span><span data-look-only="longread">Vol. 1 · Dallas–Fort Worth Edition</span><span data-look-only="longread" data-today="long"></span><span data-look-only="poster">JX LABS PRESENTS</span><span data-look-only="poster">DALLAS–FORT WORTH &amp; EVERYWHERE ELSE</span></div>
+          <div class="login-masthead" data-look-only="longread" aria-hidden="true"><strong>The JX Labs Journal</strong><span>Websites · Booking systems · Practical automation</span></div>
+          <span class="login-sticker" data-look-only="poster" aria-hidden="true">Doors<br>open</span>
           <div class="login-copy">
             <p class="login-command">C:\\JX_LABS\\PUBLIC&gt; authenticate visitor</p>
+            <span class="login-dimension" data-look-only="blueprint" aria-hidden="true"><i></i><b>A-01 / WELCOME / SCALE 1:1</b><i></i></span>
+            <p class="login-kicker" data-look-only="longread">Today’s edition</p>
+            <p class="login-kicker" data-look-only="poster">One night only. Every night.</p>
             <h1 id="login-title">Welcome.</h1>
             <p>Click login to access.</p>
-            <button class="terminal-button login-button" id="terminal-login" type="button" autofocus>Login</button>
+            <p class="login-sub" data-look-only="blueprint">Your site plan is drawn up and ready for review. Log in to walk through the full set.</p>
+            <p class="login-sub" data-look-only="longread">Inside: websites that pull their weight, the businesses we build for, and how to start a project of your own.</p>
+            <p class="login-sub" data-look-only="poster">Websites, booking systems &amp; AI tools. Live in DFW and wherever you are.</p>
+            <div class="login-actions"><button class="terminal-button login-button" id="terminal-login" type="button" autofocus>Login</button><span class="login-stub" data-look-only="poster" aria-hidden="true"><b>Admit one</b><small>All ages · Free entry</small></span></div>
             <p class="login-hint">PUBLIC ACCESS / PROJECT RECORDS / SERVICE REQUESTS</p>
+            <dl class="login-titleblock" data-look-only="blueprint"><div><dt>Project</dt><dd>JX Labs website</dd></div><div><dt>Drawn by</dt><dd>JX Labs</dd></div><div><dt>Date</dt><dd data-today="short">2026</dd></div><div><dt>Status</dt><dd>Open for review</dd></div></dl>
+            <div class="login-contents" data-look-only="longread"><p>In this issue</p><ol><li><span>Our Portfolio</span><b>2</b></li><li><span>Concept Lab</span><b>3</b></li><li><span>Services &amp; Estimate</span><b>4</b></li><li><span>How It Works</span><b>5</b></li><li><span>About JX Labs</span><b>6</b></li><li><span>Start a Project</span><b>7</b></li></ol></div>
+            <p class="login-lineup" data-look-only="poster" aria-label="Featuring our services">${services.map(([name], index) => `<span class="lineup-${index < 3 ? 'top' : 'rest'}">${escape(name)}</span>`).join('<i aria-hidden="true">★</i>')}</p>
           </div>
+          <div class="login-marquee" data-look-only="poster" aria-hidden="true"><div>${Array.from({ length: 8 }, () => '<span>Welcome</span><i>★</i><span>Come on in</span><i>★</i>').join('')}</div></div>
         </div>
         <div class="hardware-lights" aria-hidden="true"><span>POWER</span><i></i><span>DATA</span><i></i><b>PROPERTY OF JX LABS</b></div>
       </div>
@@ -78,7 +90,6 @@ export function renderPage({ settings, site, base = '/' }) {
             <span class="system-title">JX LABS PUBLIC SERVICE TERMINAL</span>
             <span class="status"><i></i> AVAILABLE FOR NEW WORK</span>
             <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="true">SOUND: ON</button>
-            ${lookSwitch()}
             <span class="clock" id="terminal-clock" aria-hidden="true">00:00:00</span>
             <div class="look-marquee" aria-hidden="true"><div>${[0, 1].map(() => services.map(([name]) => `<span>${escape(name)}</span><i>★</i>`).join('')).join('')}</div></div>
           </header>
@@ -92,6 +103,7 @@ export function renderPage({ settings, site, base = '/' }) {
               <a href="#process">HOW IT WORKS</a>
               <a href="#about">ABOUT JX LABS</a>
               <a class="contract-link float-signal" href="#booking">START A PROJECT</a>
+              ${lookSwitch()}
               <div class="machine-readout">
                 <span>RESPONSE TIME</span><strong>&lt; 24 HOURS</strong>
                 <span>SYSTEM STATE</span><strong>${ready ? 'ONLINE' : 'PREVIEW'}</strong>
@@ -156,7 +168,7 @@ export function renderPage({ settings, site, base = '/' }) {
                   <div data-boot><p>ABOUT JX LABS</p><h2 id="about-title">JX Labs</h2><span class="operator-status">WEBSITES / AI / AUTOMATION</span><p class="about-reach">Anyone. Anywhere. Anyplace.</p><p class="about-flexibility">From a simple website to a custom automation, we adapt to your business, your budget, and the way you work—wherever you’re based.</p></div>
                   <div class="about-copy">
                     <p class="lead" data-boot>Creative technology. Within reach.</p>
-                    <p data-boot>JX Labs helps businesses look professional online and simplify the work behind the scenes. We bring together creative design, websites, and practical AI tools at affordable prices, with a special focus on local and small businesses. Wherever you are, we’re ready to help.</p>
+                    <p data-boot><span class="about-initials">JX</span> Labs helps businesses look professional online and simplify the work behind the scenes. We bring together creative design, websites, and practical AI tools at affordable prices, with a special focus on local and small businesses. Wherever you are, we’re ready to help.</p>
                     <section class="about-block" aria-labelledby="about-mission" data-boot>
                       <h3 id="about-mission">Our mission</h3>
                       <p>Make modern technology accessible to businesses that want to grow. We help you put AI and the latest digital tools to work in ways that fit your goals, your day-to-day needs, and your budget.</p>

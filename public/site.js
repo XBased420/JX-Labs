@@ -381,6 +381,9 @@
   const clock = document.getElementById('terminal-clock');
   const dateline = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   const pad = value => String(Math.max(0, Math.round(value))).padStart(4, '0');
+  document.querySelectorAll('[data-today]').forEach(element => {
+    element.textContent = element.dataset.today === 'long' ? dateline.format(new Date()) : new Intl.DateTimeFormat('en-CA').format(new Date());
+  });
   const updateClock = () => {
     if (look === 'longread') clock.textContent = dateline.format(new Date());
     else if (look === 'blueprint') { if (!clock.dataset.coords) clock.textContent = 'X 0000 · Y 0000'; }
@@ -1438,6 +1441,8 @@
   const lookCurrent = document.getElementById('look-current');
   const lookStatus = document.getElementById('look-status');
   const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const phoneLayout = matchMedia('(max-width: 720px)');
+  window.addEventListener('resize', () => { if (!lookMenu.hidden) closeLookMenu({ refocus: false }); });
   const applyLook = (next, { remember = false, animate = false } = {}) => {
     if (!looks.includes(next)) next = 'terminal';
     const changed = next !== look;
@@ -1454,7 +1459,7 @@
     estimateStatus.textContent = estimateStatusText(Boolean(estimateState.selected.some(input => input.name === 'site-foundation')));
     document.querySelectorAll('.ink-nib').forEach(nib => nib.remove());
     if (remember) {
-      try { localStorage.setItem('jx-look', next); } catch { /* Private browsing: the look still applies for this visit. */ }
+      try { localStorage.setItem('jx-look-last', next); } catch { /* Private browsing: the look still applies for this visit. */ }
     }
     if (!changed) return;
     lookStatus.textContent = `${name} look applied.`;
@@ -1471,6 +1476,7 @@
     if (refocus) lookButton.focus({ preventScroll: true });
   };
   const openLookMenu = (focusLast = false) => {
+    if (phoneLayout.matches) lookMenu.style.setProperty('--look-menu-top', `${Math.round(lookButton.getBoundingClientRect().bottom + 6)}px`);
     lookMenu.hidden = false;
     lookButton.setAttribute('aria-expanded', 'true');
     const checked = lookOptions.find(item => item.getAttribute('aria-checked') === 'true');

@@ -211,23 +211,26 @@ test('terminal design lab is a safe three-concept prototype', () => {
   assert.match(readFileSync(new URL('../public/terminal-lab.css', import.meta.url), 'utf8'), /prefers-reduced-motion:reduce/);
   assert.match(previewServer, /'\.html': 'text\/html; charset=utf-8'/);
 });
-test('look switcher offers four looks, restores before paint, and keeps Terminal as the default', () => {
+test('look switcher offers four looks, shuffles before paint, and sits under Start a Project', () => {
   const html = renderPage({ settings, ...deployment(settings) });
   const behavior = readFileSync(new URL('../public/site.js', import.meta.url), 'utf8');
   const looksCss = readFileSync(new URL('../public/looks.css', import.meta.url), 'utf8');
   const version = createHash('sha256').update(looksCss).digest('hex').slice(0, 12);
   assert.ok(html.includes(`looks.css?v=${version}`));
   const head = html.slice(0, html.indexOf('</head>'));
-  assert.match(head, /localStorage\.getItem\('jx-look'\)/);
-  assert.match(head, /l='terminal'/);
-  assert.ok(head.indexOf('looks.css') < head.indexOf("getItem('jx-look')"));
+  assert.match(head, /localStorage\.getItem\('jx-look-last'\)/);
+  assert.match(head, /Math\.random\(\)\*pool\.length/);
+  assert.ok(head.indexOf('looks.css') < head.indexOf("getItem('jx-look-last')"));
+  const directory = html.slice(html.indexOf('class="directory"'), html.indexOf('class="machine-readout"'));
+  assert.ok(directory.indexOf('START A PROJECT') < directory.indexOf('id="look-switch"'));
+  assert.doesNotMatch(html.slice(html.indexOf('class="system-bar"'), html.indexOf('class="directory"')), /id="look-switch"/);
   assert.match(html, /id="look-button"[^>]*aria-haspopup="menu"[^>]*aria-expanded="false"[^>]*aria-controls="look-menu"/);
   assert.match(html, /id="look-menu" role="menu"[^>]*hidden/);
   assert.equal((html.match(/role="menuitemradio"/g) || []).length, 4);
   for (const look of ['terminal', 'blueprint', 'longread', 'poster']) assert.match(html, new RegExp(`data-look-option="${look}"`));
   assert.match(html, /aria-checked="true" tabindex="-1" data-look-option="terminal"/);
   assert.equal((html.match(/aria-checked="true"/g) || []).length, 1);
-  assert.match(behavior, /localStorage\.setItem\('jx-look', next\)/);
+  assert.match(behavior, /localStorage\.setItem\('jx-look-last', next\)/);
   assert.match(behavior, /runBoot\(view, false, \{ focus: false \}\)/);
   assert.match(looksCss, /prefers-reduced-motion:reduce/);
   for (const look of ['blueprint', 'longread', 'poster']) assert.match(looksCss, new RegExp(`\\[data-look="${look}"\\]\\{--reactor`));
@@ -245,4 +248,12 @@ test('concept demos are isolated from site looks and CRT effects', () => {
   const styles = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
   assert.match(styles, /\.concept-stage\{position:relative;z-index:31\}/);
   assert.match(styles, /\.concept-frame\{text-shadow:none;--reactor/);
+});
+test('each look has its own welcome screen and the About intro keeps the JX initials', () => {
+  const html = renderPage({ settings, ...deployment(settings) });
+  const login = html.slice(html.indexOf('id="login-screen"'), html.indexOf('id="terminal-app"'));
+  for (const look of ['blueprint', 'longread', 'poster']) assert.ok((login.match(new RegExp(`data-look-only="${look}"`, 'g')) || []).length >= 4, look);
+  assert.match(login, /class="terminal-only">JX LABS NETWORK ACCESS/);
+  assert.equal((login.match(/id="terminal-login"/g) || []).length, 1);
+  assert.match(html, /<span class="about-initials">JX<\/span> Labs helps businesses/);
 });

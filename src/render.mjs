@@ -6,6 +6,10 @@ import { readFileSync } from 'node:fs';
 const stylesheetVersion = createHash('sha256').update(readFileSync('public/styles.css')).digest('hex').slice(0, 12);
 const scriptVersion = createHash('sha256').update(readFileSync('public/site.js')).digest('hex').slice(0, 12);
 const looksVersion = createHash('sha256').update(readFileSync('public/looks.css')).digest('hex').slice(0, 12);
+const motionScriptVersion = createHash('sha256').update(readFileSync('public/motion.js')).digest('hex').slice(0, 12);
+const motionStyleVersion = createHash('sha256').update(readFileSync('public/motion.css')).digest('hex').slice(0, 12);
+// Motion libraries, vendored and pinned in public/vendor (see public/motion.js for details).
+const motionLibraries = ['vendor/gsap-3.15.0/gsap.min.js', 'vendor/gsap-3.15.0/ScrollTrigger.min.js', 'vendor/gsap-3.15.0/SplitText.min.js', 'vendor/gsap-3.15.0/ScrambleTextPlugin.min.js', 'vendor/gsap-3.15.0/Flip.min.js', 'vendor/lenis-1.3.26/lenis.min.js'];
 
 // Selectable site looks. Each page load shuffles to a random look, never the same one twice in a row.
 export const looks = [
@@ -49,7 +53,7 @@ export function renderPage({ settings, site, base = '/' }) {
   <title>JX Labs — Websites &amp; booking systems</title><meta name="description" content="JX Labs builds websites and booking systems for small businesses, barbers, DJs, and artists in Dallas, Carrollton, and across DFW. Start a project.">
   ${!settings.launchReady ? '<meta name="robots" content="noindex, nofollow">' : ''}<link rel="canonical" href="${escape(canonical)}"><meta name="theme-color" content="#050905">
   <meta property="og:type" content="website"><meta property="og:title" content="JX Labs — Websites that pull their weight."><meta property="og:description" content="Websites and booking systems, built by JX Labs."><meta property="og:url" content="${escape(canonical)}"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="JX Labs — Websites that pull their weight"><meta name="twitter:description" content="Websites and booking systems for businesses and creatives.">
-  <link rel="icon" type="image/svg+xml" href="${asset('favicon.svg')}"><link rel="preload" href="${asset('assets/fonts/space-grotesk-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('assets/fonts/manrope-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="${asset(`styles.css?v=${stylesheetVersion}`)}"><link rel="stylesheet" href="${asset(`looks.css?v=${looksVersion}`)}"><script>${lookBoot}</script><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head>
+  <link rel="icon" type="image/svg+xml" href="${asset('favicon.svg')}"><link rel="preload" href="${asset('assets/fonts/space-grotesk-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('assets/fonts/manrope-latin.woff2')}" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="${asset(`styles.css?v=${stylesheetVersion}`)}"><link rel="stylesheet" href="${asset(`looks.css?v=${looksVersion}`)}"><link rel="stylesheet" href="${asset('vendor/lenis-1.3.26/lenis.css')}"><link rel="stylesheet" href="${asset(`motion.css?v=${motionStyleVersion}`)}"><script>${lookBoot}</script><script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script></head>
   <body class="terminal-locked">
     <div class="login-screen" id="login-screen" role="dialog" aria-modal="true" aria-labelledby="login-title">
       <div class="login-housing">
@@ -212,6 +216,6 @@ export function renderPage({ settings, site, base = '/' }) {
         <div class="hardware-row" aria-hidden="true" data-boot><span>POWER</span><i></i><span>DATA</span><i></i><b>PROPERTY OF JX LABS</b></div>
       </div>
     </div>
-    <script type="application/json" id="site-config">${config}</script><script defer src="${asset(`site.js?v=${scriptVersion}`)}"></script>
+    <script type="application/json" id="site-config">${config}</script>${motionLibraries.map(path => `<script defer src="${asset(path)}"></script>`).join('')}<script defer src="${asset(`motion.js?v=${motionScriptVersion}`)}"></script><script defer src="${asset(`site.js?v=${scriptVersion}`)}"></script>
   </body></html>`;
 }

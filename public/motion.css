@@ -1,0 +1,49 @@
+/* JX Labs motion layer styles (public/motion.css). Pairs with public/motion.js.
+   Every rule here only applies to classes motion.js adds, so without motion.js nothing changes. */
+
+/* One accent per look, taken from that look's own palette. */
+:root{--motion-accent:var(--phosphor)}
+[data-look="blueprint"],[data-look="longread"]{--motion-accent:var(--accent)}
+[data-look="poster"]{--motion-accent:var(--pink)}
+
+/* Lenis: native smooth scrolling would fight Lenis, so turn it off while Lenis runs. */
+html.lenis,html.lenis body{scroll-behavior:auto!important}
+
+/* Below-the-fold items wait here until they scroll into view, then play the look's own boot. */
+.js [data-boot].motion-pending{opacity:0;clip-path:inset(0 100% 0 0)}
+.look-alt.js [data-boot].motion-pending{clip-path:none}
+[data-look="blueprint"].js [data-boot].motion-pending{transform:translateY(10px)}
+.js [data-boot].motion-reveal{animation:terminal-write .38s steps(12,end) both}
+[data-look="blueprint"].js [data-boot].motion-reveal{animation:bp-plot .52s cubic-bezier(.2,.7,.2,1) both}
+[data-look="blueprint"].js :is(#hero-title,.section-head).motion-reveal{animation:bp-plot .52s cubic-bezier(.2,.7,.2,1) both,bp-ink 1.1s .05s ease-out both}
+[data-look="longread"].js [data-boot].motion-reveal{animation:lr-settle .62s ease-out both}
+[data-look="poster"].js [data-boot].motion-reveal{animation:po-slam .44s cubic-bezier(.2,1.5,.35,1) both}
+
+/* How It Works: each step's top rule draws in sequence. */
+.steps.motion-line li{position:relative}
+.steps.motion-line li::after{content:"";position:absolute;left:0;right:0;top:-2px;height:3px;background:var(--motion-accent);transform:scaleX(var(--step-p,0));transform-origin:0 50%;pointer-events:none}
+.steps.motion-line li>span{transition:color .3s}
+.steps.motion-line li.motion-step-on>span{color:var(--motion-accent)}
+
+/* Split letters and counting digits. */
+.motion-char{display:inline-block;will-change:transform}
+.motion-count{font:inherit;font-variant-numeric:tabular-nums}
+
+/* Magnet: composes with existing transform animations through the separate translate property. */
+.motion-magnet{--mx:0;--my:0;translate:calc(var(--mx) * 1px) calc(var(--my) * 1px)}
+
+/* Spotlight that follows the pointer across cards. */
+.motion-spot-host{position:relative}
+jx-spot.motion-spotlight{position:absolute;inset:0;z-index:0;display:block;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s ease;background:radial-gradient(260px circle at var(--sx,50%) var(--sy,50%),color-mix(in srgb,var(--motion-accent) 15%,transparent),transparent 72%)}
+jx-spot.motion-spotlight.is-on{opacity:1}
+
+/* Concept Lab card-to-viewer photo, confetti and the login glyph field. */
+.motion-ghost{position:fixed;z-index:95;margin:0;max-width:none;object-fit:cover;pointer-events:none;box-shadow:0 18px 50px #0006}
+.motion-sparks{position:fixed;inset:0;z-index:95;width:100vw;height:100vh;pointer-events:none}
+.motion-glyphs{position:absolute;inset:0;z-index:0;pointer-events:none;-webkit-mask-image:radial-gradient(ellipse 60% 42% at var(--glyph-x,50%) var(--glyph-y,52%),transparent 0,transparent 40%,#000 100%);mask-image:radial-gradient(ellipse 60% 42% at var(--glyph-x,50%) var(--glyph-y,52%),transparent 0,transparent 40%,#000 100%)}
+[data-look="terminal"] .login-glass>:not(.motion-glyphs){position:relative;z-index:1}
+
+@media (prefers-reduced-motion:reduce){
+  .js [data-boot].motion-pending{opacity:1!important;clip-path:none!important;transform:none!important}
+  .motion-glyphs,.motion-sparks,.motion-ghost,jx-spot.motion-spotlight{display:none!important}
+}

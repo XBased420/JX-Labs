@@ -257,3 +257,22 @@ test('each look has its own welcome screen and the About intro keeps the JX init
   assert.equal((login.match(/id="terminal-login"/g) || []).length, 1);
   assert.match(html, /<span class="about-initials">JX<\/span> Labs helps businesses/);
 });
+test('motion layer loads pinned libraries before the site script and stays optional', () => {
+  const html = renderPage({ settings, ...deployment(settings) });
+  const order = [...html.matchAll(/<script defer src="[^"]*?((?:vendor\/[^"?]+)|motion\.js|site\.js)[^"]*"/g)].map(match => match[1]);
+  assert.deepEqual(order, ['vendor/gsap-3.15.0/gsap.min.js', 'vendor/gsap-3.15.0/ScrollTrigger.min.js', 'vendor/gsap-3.15.0/SplitText.min.js', 'vendor/gsap-3.15.0/ScrambleTextPlugin.min.js', 'vendor/gsap-3.15.0/Flip.min.js', 'vendor/lenis-1.3.26/lenis.min.js', 'motion.js', 'site.js']);
+  const version = createHash('sha256').update(readFileSync(new URL('../public/motion.js', import.meta.url))).digest('hex').slice(0, 12);
+  assert.ok(html.includes(`motion.js?v=${version}`));
+  assert.match(html, /vendor\/lenis-1\.3\.26\/lenis\.css/);
+  for (const notice of ['gsap-3.15.0/LICENSE.txt', 'lenis-1.3.26/LICENSE.txt']) assert.ok(existsSync(new URL(`../public/vendor/${notice}`, import.meta.url)), notice);
+  const motion = readFileSync(new URL('../public/motion.js', import.meta.url), 'utf8');
+  assert.match(motion, /React Bits/);
+  assert.match(motion, /prefers-reduced-motion/);
+  assert.match(motion, /if \(!gsap \|\| !ScrollTrigger\) return;/);
+  const behavior = readFileSync(new URL('../public/site.js', import.meta.url), 'utf8');
+  assert.match(behavior, /const scrollToTop = \(\) => \{ if \(!fx\(\)\?\.scrollTop\(\)\) window\.scrollTo/);
+  assert.match(behavior, /bootTimers\.push\(window\.setTimeout\(callback, ms\)\)/);
+  const styles = readFileSync(new URL('../public/motion.css', import.meta.url), 'utf8');
+  assert.match(styles, /html\.lenis,html\.lenis body\{scroll-behavior:auto!important\}/);
+  assert.match(styles, /prefers-reduced-motion:reduce/);
+});

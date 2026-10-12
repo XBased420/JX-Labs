@@ -218,9 +218,16 @@
     }
   });
 
+  // Optional motion layer (public/motion.js). Every call below falls back to the original
+  // behaviour when it is missing, fails to load, or the visitor prefers reduced motion.
+  const fx = () => window.JXMotion;
+  const scrollToTop = () => { if (!fx()?.scrollTop()) window.scrollTo({ top: 0, behavior: 'instant' }); };
+  let bootClock = null;
   const clearBoot = () => {
     bootTimers.forEach(timer => clearTimeout(timer));
     bootTimers = [];
+    if (bootClock) { bootClock.kill(); bootClock = null; }
+    fx()?.bootClear();
     document.querySelectorAll('.boot-sequence').forEach(scope => scope.classList.remove('boot-sequence'));
     document.querySelectorAll('[data-boot].is-live').forEach(item => item.classList.remove('is-live'));
   };
@@ -311,24 +318,31 @@
     if (includeChrome) app.classList.add('booting');
     playPageOpen();
     void scope.offsetWidth;
-    items.forEach((item, index) => {
-      bootTimers.push(window.setTimeout(() => {
+    // The boot runs on a GSAP timeline when the motion layer is present, otherwise on timers.
+    // The motion layer may hold back items that are still below the fold; they type in later
+    // as the visitor scrolls to them.
+    bootClock = fx()?.timeline() || null;
+    const later = (callback, ms) => (bootClock ? bootClock.call(callback, null, ms / 1000) : bootTimers.push(window.setTimeout(callback, ms)));
+    const sequence = (bootClock && fx().bootStart({ view, items, chrome: chromeItems, tick: playKeyTick, timeline: bootClock, ink: heading => writeHeading(heading, 60) })) || items;
+    sequence.forEach((item, index) => {
+      later(() => {
         item.classList.add('is-live');
         playKeyTick(index);
-      }, 170 + index * 72));
+      }, 170 + index * 72);
     });
     if (look === 'longread') inkTargets(view).forEach(heading => {
       const host = heading.closest('[data-boot]');
-      writeHeading(heading, 210 + Math.max(0, items.indexOf(host)) * 72);
+      if (host && !sequence.includes(host)) return;
+      writeHeading(heading, 210 + Math.max(0, sequence.indexOf(host)) * 72);
     });
-    bootTimers.push(window.setTimeout(() => {
+    later(() => {
       scope.classList.remove('boot-sequence');
       items.forEach(item => item.classList.remove('is-live'));
       app.classList.add('terminal-ready');
       app.classList.remove('booting');
       view.tabIndex = -1;
       if (focus) view.focus({ preventScroll: true });
-    }, 300 + items.length * 72));
+    }, 300 + sequence.length * 72);
   };
 
   const activateView = (id, { boot = true, historyMode = 'push', includeChrome = false } = {}) => {
@@ -350,16 +364,18 @@
     if (directory && directory.scrollWidth > directory.clientWidth) {
       directory.scrollTo({ left: Math.max(0, activeLink.offsetLeft - (directory.clientWidth - activeLink.offsetWidth) / 2), behavior: motion.matches ? 'instant' : 'smooth' });
     }
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    scrollToTop();
     if (historyMode === 'push') history.pushState(null, '', `#${target.id}`);
     if (historyMode === 'replace') history.replaceState(null, '', `#${target.id}`);
     if (boot) runBoot(target, includeChrome);
+    fx()?.viewShown(target);
     return target;
   };
 
   const finishLogin = () => {
     login.hidden = true;
     document.body.classList.remove('terminal-locked');
+    fx()?.unlock();
     app.style.visibility = 'visible';
     app.inert = false;
     app.removeAttribute('aria-hidden');
@@ -914,7 +930,7 @@
     conceptViewer.hidden = true;
     conceptCatalog.hidden = false;
     setConceptDevice('desktop');
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    scrollToTop();
     if (focus) document.getElementById('concepts-title').focus({ preventScroll: true });
   };
   const openConcept = id => {
@@ -927,7 +943,7 @@
     document.querySelectorAll('[data-concept-demo]').forEach(demo => { demo.hidden = demo.dataset.conceptDemo !== id; });
     conceptTitle.textContent = `${selected.name} / interactive concept`;
     resetConcept();
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    scrollToTop();
     conceptTitle.focus({ preventScroll: true });
     playPageOpen();
   };
@@ -1287,6 +1303,7 @@
     : (ready ? 'ESTIMATE READY' : 'WAITING FOR A SITE TYPE');
 
   const updateEstimate = ({ playSound = true } = {}) => {
+    const previousOneTime = estimateState.oneTime;
     const selected = estimateInputs.filter(input => input.checked);
     const foundation = selected.find(input => input.name === 'site-foundation');
     const oneTime = selected.reduce((sum, input) => sum + Number(input.dataset.oneTime || 0), 0);
@@ -1317,6 +1334,7 @@
       estimateOutput.classList.remove('estimate-locked');
       void estimateOutput.offsetWidth;
       estimateOutput.classList.add('estimate-locked');
+      if (playSound) fx()?.countEstimate({ total: estimateTotal, deposit: estimateDeposit, from: previousOneTime, to: oneTime, rate: oneTime && depositRate ? depositRate : 0 });
     }
 
     estimateState = { selected, oneTime, monthly, custom, summary };
@@ -1458,6 +1476,7 @@
     updateClock();
     estimateStatus.textContent = estimateStatusText(Boolean(estimateState.selected.some(input => input.name === 'site-foundation')));
     document.querySelectorAll('.ink-nib').forEach(nib => nib.remove());
+    fx()?.lookChanged(next);
     if (remember) {
       try { localStorage.setItem('jx-look-last', next); } catch { /* Private browsing: the look still applies for this visit. */ }
     }

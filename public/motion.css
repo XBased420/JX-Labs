@@ -43,7 +43,11 @@ jx-spot.motion-spotlight.is-on{opacity:1}
 .motion-glyphs{position:absolute;inset:0;z-index:0;pointer-events:none;-webkit-mask-image:radial-gradient(ellipse 60% 42% at var(--glyph-x,50%) var(--glyph-y,52%),transparent 0,transparent 40%,#000 100%);mask-image:radial-gradient(ellipse 60% 42% at var(--glyph-x,50%) var(--glyph-y,52%),transparent 0,transparent 40%,#000 100%)}
 [data-look="terminal"] .login-glass>:not(.motion-glyphs){position:relative;z-index:1}
 
+/* Blueprint: the 3D wireframe network replaces the flat drifting grid while it runs. */
+.motion-space{position:fixed;inset:0;z-index:-1;display:block;pointer-events:none}
+.motion-space-on[data-look="blueprint"] .screen::before,.motion-space-on[data-look="blueprint"] .login-screen::before{display:none}
+
 @media (prefers-reduced-motion:reduce){
   .js [data-boot].motion-pending{opacity:1!important;clip-path:none!important;transform:none!important}
-  .motion-glyphs,.motion-sparks,.motion-ghost,jx-spot.motion-spotlight{display:none!important}
+  .motion-glyphs,.motion-sparks,.motion-ghost,.motion-space,jx-spot.motion-spotlight{display:none!important}
 }

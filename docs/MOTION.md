@@ -36,6 +36,7 @@ Several effects are adapted from React Bits (MIT + Commons Clause, © David Haz)
 | Pointer spotlight on cards | Concept cards, estimate options, portfolio rows; mouse only | React Bits SpotlightCard |
 | Success beat | Terminal decrypt, Poster confetti, others fade in | ScrambleText / React Bits ClickSpark |
 | Dim glyph field behind the welcome screen | Terminal login only | React Bits LetterGlitch (canvas) |
+| 3D wireframe neural network you slowly fly through (layers of linked nodes, firing signals, rotating wireframe hubs, wireframe floor and ceiling; leans toward the pointer, speeds up while scrolling) | Blueprint look background, login and site; replaces the flat drifting grid, which stays as the fallback | Canvas 2D, `wireSpace()` in motion.js |
 
 Colours come from each look's CSS variables, so every effect matches all four looks.
 

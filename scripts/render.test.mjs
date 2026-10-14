@@ -276,3 +276,14 @@ test('motion layer loads pinned libraries before the site script and stays optio
   assert.match(styles, /html\.lenis,html\.lenis body\{scroll-behavior:auto!important\}/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
 });
+test('Blueprint flies through a 3D wireframe network, with the flat grid kept as the fallback', () => {
+  const motion = readFileSync(new URL('../public/motion.js', import.meta.url), 'utf8');
+  const motionCss = readFileSync(new URL('../public/motion.css', import.meta.url), 'utf8');
+  const looksCss = readFileSync(new URL('../public/looks.css', import.meta.url), 'utf8');
+  assert.match(motion, /const wireSpace = /);
+  assert.match(motion, /look\(\) === 'blueprint' && !document\.hidden/);
+  assert.match(motion, /space\.sync\(\)/);
+  assert.match(motionCss, /\.motion-space-on\[data-look="blueprint"\] \.screen::before/);
+  assert.match(motionCss, /\.motion-space,/);
+  assert.match(looksCss, /\[data-look="blueprint"\] \.screen::before,\[data-look="blueprint"\] \.login-screen::before\{content:""/);
+});

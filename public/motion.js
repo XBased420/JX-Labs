@@ -319,6 +319,238 @@
     return { sync, destroy: () => { running = false; resize.disconnect(); document.removeEventListener('visibilitychange', sync); canvas.remove(); } };
   };
 
+  // Blueprint backdrop: a slow flight through a 3D wireframe network. Nodes linked by thin lines,
+  // signal pulses travelling along the links, a few rotating wireframe hubs, and a receding
+  // wireframe floor and ceiling, all in Blueprint's own colors. The camera leans toward the
+  // pointer and scrolling briefly speeds up the flight. It sits behind the login sheet while the
+  // site is locked and behind the whole site after login. Pauses when hidden or in another look.
+  const wireSpace = ({ host, active }) => {
+    const canvas = document.createElement('canvas');
+    canvas.className = 'motion-space';
+    canvas.setAttribute('aria-hidden', 'true');
+    const context = canvas.getContext('2d');
+    const FAR = 2700;
+    const NEAR = 70;
+    const GAP = 270;
+    const SPREAD_X = 1250;
+    const SPREAD_Y = 640;
+    const PLANE = 620;
+    const CELL = 170;
+    const RAIL_SPAN = 2550;
+    let width = 0;
+    let height = 0;
+    let focal = 600;
+    let layers = [];
+    let pulses = [];
+    let running = false;
+    let lastTime = 0;
+    let lastPulse = 0;
+    let travel = 0;
+    let camX = 0;
+    let camY = 0;
+    let aimX = 0;
+    let aimY = 0;
+    let boost = 0;
+    let lastScroll = scrollY;
+    let colors = { accent: '#1f47d6', grid: '#9fb0c8' };
+    const rand = (min, max) => min + Math.random() * (max - min);
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    // The network is a stack of layers (slices of nodes) along the flight path. Each node is
+    // wired to two or three nodes in the next layer, like a neural network, and to a neighbour
+    // in its own layer. Layers that pass the camera are recycled to the far end.
+    const makeLayer = (z, previous) => {
+      const count = width < 720 ? 6 : 10;
+      const nodes = Array.from({ length: count }, () => ({
+        x: rand(-SPREAD_X, SPREAD_X), y: rand(-SPREAD_Y, SPREAD_Y), z,
+        hub: Math.random() < 0.1, spin: rand(0, Math.PI * 2), spinRate: rand(0.25, 0.6) * (Math.random() < 0.5 ? -1 : 1)
+      }));
+      const links = [];
+      if (previous) {
+        previous.nodes.forEach(from => {
+          const nearest = [...nodes].sort((a, b) => Math.hypot(a.x - from.x, a.y - from.y) - Math.hypot(b.x - from.x, b.y - from.y));
+          nearest.slice(0, Math.random() < 0.4 ? 3 : 2).forEach(to => links.push([from, to, 'deep']));
+        });
+      }
+      nodes.forEach(node => {
+        const sibling = [...nodes].filter(other => other !== node).sort((a, b) => Math.hypot(a.x - node.x, a.y - node.y) - Math.hypot(b.x - node.x, b.y - node.y))[0];
+        if (sibling && Math.random() < 0.7) links.push([node, sibling, 'flat']);
+      });
+      return { z, nodes, links };
+    };
+    const seed = () => {
+      layers = [];
+      for (let z = NEAR + GAP * 0.6; z < FAR + GAP; z += GAP) layers.push(makeLayer(z, layers[layers.length - 1]));
+      pulses = [];
+    };
+    const size = () => {
+      width = innerWidth;
+      height = innerHeight;
+      const ratio = Math.min(width < 720 ? 1.25 : 1.6, devicePixelRatio || 1);
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      focal = Math.max(width, height) * 0.6;
+      colors = { accent: cssVar('--accent', '#1f47d6'), grid: '#8ea2c0' };
+      if (!layers.length) seed();
+    };
+    const project = (x, y, z) => {
+      const scale = focal / z;
+      return [width / 2 + (x - camX) * scale, height * 0.45 + (y - camY) * scale, scale];
+    };
+    // Strongest in the middle distance; links fade out before they pass the camera so they never cross the text at full size.
+    const depthFade = z => clamp((FAR - z) / (FAR * 0.55), 0, 1) * clamp((z - NEAR) / 640, 0, 1) * (width < 720 ? 0.75 : 1);
+    const line = (a, b, alpha, color, lineWidth = 1) => {
+      if (alpha <= 0.01) return;
+      context.globalAlpha = alpha;
+      context.strokeStyle = color;
+      context.lineWidth = lineWidth;
+      context.beginPath();
+      context.moveTo(a[0], a[1]);
+      context.lineTo(b[0], b[1]);
+      context.stroke();
+    };
+    const drawPlanes = () => {
+      // Floor and ceiling: rails running into the distance, and cross lines sliding toward us.
+      [PLANE, -PLANE * 1.15].forEach((planeY, index) => {
+        const strength = index ? 0.45 : 0.7;
+        for (let x = -RAIL_SPAN; x <= RAIL_SPAN; x += CELL) {
+          for (let z = NEAR + 40; z < FAR; z += 300) {
+            line(project(x, planeY, z), project(x, planeY, Math.min(FAR, z + 300)), depthFade(z + 150) * strength, colors.grid);
+          }
+        }
+        const offset = travel % CELL;
+        for (let z = CELL - offset + NEAR; z < FAR; z += CELL) {
+          line(project(-RAIL_SPAN, planeY, z), project(RAIL_SPAN, planeY, z), depthFade(z) * strength, colors.grid);
+        }
+      });
+    };
+    const OCTA = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+    const OCTA_EDGES = [[0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [1, 3], [1, 4], [1, 5], [2, 4], [2, 5], [3, 4], [3, 5]];
+    const drawHub = (node, alpha) => {
+      const radius = 30;
+      const cos = Math.cos(node.spin);
+      const sin = Math.sin(node.spin);
+      const points = OCTA.map(([x, y, z]) => {
+        const rx = x * cos - z * sin;
+        const rz = x * sin + z * cos;
+        const ry = y * Math.cos(node.spin * 0.6) - rz * Math.sin(node.spin * 0.6);
+        const rz2 = y * Math.sin(node.spin * 0.6) + rz * Math.cos(node.spin * 0.6);
+        return project(node.x + rx * radius, node.y + ry * radius, Math.max(NEAR, node.z + rz2 * radius));
+      });
+      OCTA_EDGES.forEach(([a, b]) => line(points[a], points[b], alpha * 0.85, colors.accent, 1));
+    };
+    const step = time => {
+      if (!running) return;
+      const dt = Math.min(0.05, (time - (lastTime || time)) / 1000);
+      lastTime = time;
+      const scrolled = Math.abs(scrollY - lastScroll);
+      lastScroll = scrollY;
+      boost = Math.min(1100, boost * Math.exp(-dt * 2.4) + scrolled * 22);
+      const speed = 85 + boost;
+      travel += speed * dt;
+      camX += (aimX - camX) * Math.min(1, dt * 1.8);
+      camY += (aimY - camY) * Math.min(1, dt * 1.8);
+      layers.forEach(layer => {
+        layer.z -= speed * dt;
+        layer.nodes.forEach(node => { node.z = layer.z; node.spin += node.spinRate * dt; });
+      });
+      while (layers.length && layers[0].z < NEAR) {
+        const gone = layers.shift();
+        pulses = pulses.filter(pulse => !gone.nodes.includes(pulse.from) && !gone.nodes.includes(pulse.to));
+        if (layers[0]) layers[0].links = layers[0].links.filter(link => link[2] !== 'deep');
+        layers.push(makeLayer(layers[layers.length - 1].z + GAP, layers[layers.length - 1]));
+      }
+
+      context.clearRect(0, 0, width, height);
+      drawPlanes();
+      const allLinks = [];
+      layers.forEach(layer => layer.links.forEach(link => {
+        const [from, to, kind] = link;
+        allLinks.push(link);
+        const alpha = Math.min(depthFade(from.z), depthFade(to.z)) * (kind === 'deep' ? 0.36 : 0.22);
+        line(project(from.x, from.y, from.z), project(to.x, to.y, to.z), alpha, colors.accent, 1);
+      }));
+      layers.forEach(layer => layer.nodes.forEach(node => {
+        const alpha = depthFade(node.z);
+        if (alpha <= 0.02) return;
+        if (node.hub) { drawHub(node, alpha); return; }
+        const [x, y, scale] = project(node.x, node.y, node.z);
+        context.globalAlpha = alpha * 0.9;
+        context.fillStyle = colors.accent;
+        context.beginPath();
+        context.arc(x, y, clamp(scale * 3.6, 0.8, 4.6), 0, Math.PI * 2);
+        context.fill();
+        context.globalAlpha = alpha * 0.35;
+        context.strokeStyle = colors.accent;
+        context.lineWidth = 1;
+        context.beginPath();
+        context.arc(x, y, clamp(scale * 8, 2, 9), 0, Math.PI * 2);
+        context.stroke();
+      }));
+
+      // Signals firing through the network, layer to layer.
+      const deepLinks = allLinks.filter(link => link[2] === 'deep');
+      if (time - lastPulse > 180 && pulses.length < 16 && deepLinks.length) {
+        lastPulse = time;
+        const [from, to] = deepLinks[(Math.random() * deepLinks.length) | 0];
+        pulses.push({ from, to, t: 0, duration: rand(0.6, 1.2) });
+      }
+      pulses = pulses.filter(pulse => {
+        pulse.t += dt / pulse.duration;
+        if (pulse.t >= 1) return false;
+        const at = t => [pulse.from.x + (pulse.to.x - pulse.from.x) * t, pulse.from.y + (pulse.to.y - pulse.from.y) * t, pulse.from.z + (pulse.to.z - pulse.from.z) * t];
+        const [x, y, z] = at(pulse.t);
+        const [px, py, scale] = project(x, y, z);
+        const alpha = depthFade(z);
+        line(project(...at(Math.max(0, pulse.t - 0.2))), [px, py], alpha * 0.95, colors.accent, clamp(scale * 2.4, 1.2, 2.8));
+        context.globalAlpha = alpha;
+        context.fillStyle = colors.accent;
+        context.beginPath();
+        context.arc(px, py, clamp(scale * 5, 1.6, 4.8), 0, Math.PI * 2);
+        context.fill();
+        context.globalAlpha = alpha * 0.16;
+        context.beginPath();
+        context.arc(px, py, clamp(scale * 16, 5, 14), 0, Math.PI * 2);
+        context.fill();
+        return true;
+      });
+      context.globalAlpha = 1;
+      requestAnimationFrame(step);
+    };
+    const pointer = event => {
+      aimX = (event.clientX / (width || 1) - 0.5) * 220;
+      aimY = (event.clientY / (height || 1) - 0.5) * 130;
+    };
+    const sync = () => {
+      const on = active();
+      root.classList.toggle('motion-space-on', on);
+      canvas.hidden = !on;
+      if (on) {
+        const target = host();
+        if (target && canvas.parentElement !== target) target.prepend(canvas);
+        if (!running) { running = true; lastTime = 0; lastScroll = scrollY; size(); requestAnimationFrame(step); }
+      } else running = false;
+    };
+    const resized = () => { if (running) size(); };
+    addEventListener('resize', resized, { passive: true });
+    addEventListener('pointermove', pointer, { passive: true });
+    document.addEventListener('visibilitychange', sync);
+    sync();
+    return {
+      sync,
+      destroy: () => {
+        running = false;
+        root.classList.remove('motion-space-on');
+        removeEventListener('resize', resized);
+        removeEventListener('pointermove', pointer);
+        document.removeEventListener('visibilitychange', sync);
+        canvas.remove();
+      }
+    };
+  };
+
   // =============================================================== Phase 2: text in the boot
   const headingSelector = '#hero-title, .section-head h2, .booking-intro h2, .about-grid h2';
   const headingsIn = item => [...(item.matches(headingSelector) ? [item] : []), ...item.querySelectorAll(headingSelector)];
@@ -535,6 +767,7 @@
   const login = document.getElementById('login-screen');
   const glass = document.querySelector('.login-glass');
   let glyphs = { sync: no, destroy: no };
+  let space = { sync: no, destroy: no };
 
   // =============================================================== Media-query driven setup
   // gsap.matchMedia re-runs this whenever reduced-motion or pointer type changes, and its
@@ -558,6 +791,11 @@
       const watch = new MutationObserver(() => glyphs.sync());
       watch.observe(login, { attributes: true, attributeFilter: ['hidden'] });
       cleanups.push(() => { watch.disconnect(); glyphs.destroy(); glyphs = { sync: no, destroy: no }; });
+      const screen = document.querySelector('.screen');
+      space = wireSpace({ host: () => (login.hidden ? screen : login), active: () => look() === 'blueprint' && !document.hidden });
+      const spaceWatch = new MutationObserver(() => space.sync());
+      spaceWatch.observe(login, { attributes: true, attributeFilter: ['hidden'] });
+      cleanups.push(() => { spaceWatch.disconnect(); space.destroy(); space = { sync: no, destroy: no }; });
     }
     if (fine) {
       // Directory links scramble briefly on hover (Terminal look).
@@ -584,6 +822,7 @@
   api.lookChanged = () => {
     requestAnimationFrame(() => ScrollTrigger.refresh());
     glyphs.sync();
+    space.sync();
     return true;
   };
 })();

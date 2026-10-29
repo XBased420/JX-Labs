@@ -287,3 +287,18 @@ test('Blueprint flies through a 3D wireframe network, with the flat grid kept as
   assert.match(motionCss, /\.motion-space,/);
   assert.match(looksCss, /\[data-look="blueprint"\] \.screen::before,\[data-look="blueprint"\] \.login-screen::before\{content:""/);
 });
+
+test('Payday AJ has one contained live preview and a direct official-site fallback', () => {
+  const html = renderPage({ settings, site: 'https://xbased420.github.io', base: '/test-repo/' });
+  assert.equal((html.match(/class="project-preview-frame"/g) || []).length, 1);
+  const frame = html.match(/<iframe class="project-preview-frame"[^>]+>/)?.[0];
+  assert.ok(frame);
+  assert.match(frame, /src="https:\/\/paydayaj\.com\/"/);
+  assert.match(frame, /title="Payday AJ live website preview"/);
+  assert.match(frame, /loading="lazy"/);
+  assert.match(frame, /sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"/);
+  assert.doesNotMatch(frame, /allow-top-navigation/);
+  assert.match(html, /href="https:\/\/paydayaj\.com\/" target="_blank" rel="noopener noreferrer">open paydayaj\.com in a new tab/);
+  assert.doesNotMatch(html, /xbased420\.github\.io\/PaydayAj/);
+});
+

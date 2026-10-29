@@ -263,3 +263,12 @@
 }
 @media(max-width:520px){.system-bar .status{display:none}}
 @media(max-width:420px){.directory>a{font-size:.76rem}}
+
+/* Live portfolio previews inherit the active JX Labs look. */
+.project-preview{position:relative;z-index:31;isolation:isolate;min-width:0;margin:1.5rem 0;border:1px solid var(--dim);background:var(--glass);text-shadow:none}
+.project-preview-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.6rem;padding:.85rem 1rem;border-bottom:1px solid var(--dim);color:var(--phosphor);font:600 .7rem/1.5 var(--sans)}
+.project-preview a{color:inherit;text-decoration:underline;text-underline-offset:.2em}
+.project-preview-frame{display:block;width:100%;height:clamp(520px,68vh,760px);border:0;background:#090b08;color-scheme:normal;overscroll-behavior:contain}
+.case-content .project-preview-note{margin:0;padding:.85rem 1rem;border-top:1px solid var(--dim);font-size:.78rem;line-height:1.6}
+@media(max-width:720px){.project-preview-bar{padding:.75rem}.project-preview-frame{height:580px}.case-content .project-preview-note{padding:.75rem}}
+

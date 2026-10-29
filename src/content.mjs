@@ -19,9 +19,9 @@ export const projects = [
   {
     id: 'payday', name: 'Payday AJ', category: 'Artist brand site', status: 'LIVE',
     line: 'A digital home for a Dallas rap artist and actor.',
-    problem: 'An artist’s online presence needs to give people a feel for the person and the work. We built this site to pitch Payday AJ on what that presence could be.',
-    built: 'We built a single-scroll brand site for Payday AJ, @ajpaydaynosleep. The page uses real photos and real content. It puts the artist’s identity at the center of the experience. The site is live on GitHub Pages.',
-    stack: ['GitHub Pages'], stackPending: '[[NEEDS JX LABS: confirmed stack — Payday AJ]]', screenshot: '', url: 'https://xbased420.github.io/PaydayAj/'
+    problem: 'An artist’s online presence needs to give people a feel for the person and the work. The site brings Payday AJ’s music, videos, acting work, and booking into one official home.',
+    built: 'We built a single-scroll brand site for Payday AJ, @ajpaydaynosleep. The page uses real photos and real content. It puts the artist’s identity at the center of the experience. The official site is live at paydayaj.com, with music, videos, film work, and a direct booking flow.',
+    stack: ['GitHub Pages'], screenshot: '', url: 'https://paydayaj.com/', embed: true
   },
   {
     id: 'scheduling', name: 'Business Scheduling App', category: 'Scheduling tool', status: 'IN PROGRESS',
@@ -39,3 +39,4 @@ export const projects = [
   }
 ];
 export const skills = ['HTML/CSS', 'JavaScript', 'Astro', 'Stripe', 'MCP servers', 'Python (basics)', 'Claude Code / AI-assisted development', 'Prompt engineering'];
+

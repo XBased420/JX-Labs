@@ -189,8 +189,8 @@
   // SpotlightCard: a soft light follows the pointer across a card. Colour comes from the
   // active look's CSS variables (see motion.css), so it matches all four looks.
   const spotlight = host => {
-    const added = getComputedStyle(host).position === 'static';
-    if (added) host.classList.add('motion-spot-host');
+    const added = !host.classList.contains('motion-spot-host');
+    host.classList.add('motion-spot-host');
     const spot = document.createElement('jx-spot');
     spot.className = 'motion-spotlight';
     spot.setAttribute('aria-hidden', 'true');
@@ -813,7 +813,7 @@
       });
       document.querySelectorAll('.float-signal, #estimate-start, .concept-request, #booking-form button[type=submit], .concept-invite .terminal-button')
         .forEach(element => cleanups.push(magnet(element)));
-      document.querySelectorAll('.concept-card, .estimate-option label, details.project > summary')
+      document.querySelectorAll('.concept-card, .estimate-option label, details.project')
         .forEach(host => cleanups.push(spotlight(host)));
     }
     return () => { cleanups.forEach(cleanup => cleanup && cleanup()); stopLenis(); };
@@ -826,3 +826,4 @@
     return true;
   };
 })();
+

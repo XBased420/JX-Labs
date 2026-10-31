@@ -93,7 +93,7 @@ test('production shell requires an explicit login and exposes a sequenced boot',
   assert.match(behavior, /index \* 72/);
 });
 test('legacy repository paths do not count as visible XBased branding', () => {
-  const legacyDeployment = deployment(settings, 'XBased420/XBasedSite');
+  const legacyDeployment = deployment({ ...settings, customDomain: '' }, 'XBased420/XBasedSite');
   const html = renderPage({ settings, ...legacyDeployment });
   assert.match(html, /src="\/XBasedSite\/site\.js\?v=[a-f0-9]{12}"/);
   assert.match(html, /aria-label="JX Labs home">JX Labs<\/a>/);

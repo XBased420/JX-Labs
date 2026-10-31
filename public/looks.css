@@ -52,7 +52,8 @@
   .directory{backdrop-filter:none}
   .directory .look-switch{position:sticky;right:0;z-index:2;flex:none;margin:0 0 0 auto;padding-left:.45rem;background:inherit;box-shadow:-12px 0 10px -8px #0008}
   .directory .look-button{display:flex;width:auto;min-height:44px;padding:.5rem .7rem;gap:.45rem}
-  .directory .look-menu{position:fixed;left:auto;right:.75rem;top:var(--look-menu-top,7rem);width:min(280px,calc(100vw - 1.5rem))}
+  .directory .look-menu,.look-menu.look-menu-floating{position:fixed;left:auto;right:.75rem;top:var(--look-menu-top,7rem);width:min(280px,calc(100vw - 1.5rem))}
+  .look-menu.look-menu-floating{z-index:1000;max-height:calc(100dvh - var(--look-menu-top,7rem) - .75rem);overflow-y:auto;overscroll-behavior:contain}
 }
 
 /* ------------------------------------------------------------------ shared resets for every non-terminal look */
@@ -332,8 +333,8 @@
 [data-look="longread"].js .boot-sequence [data-boot].is-live{animation:lr-settle .62s ease-out both}
 [data-look="longread"] .terminal-app.booting .screen{animation:lr-wake .5s ease-out both}
 [data-look="longread"] .is-writing{position:relative}
-[data-look="longread"] .is-writing .ink-word{animation:lr-write var(--ink-dur,.4s) var(--ink-delay,0s) cubic-bezier(.45,.05,.55,.95) both}
-[data-look="longread"] .is-writing .ink-word.ink-mark{animation:lr-write var(--ink-dur,.4s) var(--ink-delay,0s) cubic-bezier(.45,.05,.55,.95) both,lr-mark .5s var(--mark-delay,0s) ease-out both}
+[data-look="longread"] .is-writing .ink-word{animation:lr-write var(--ink-dur,.4s) var(--ink-delay,0s) cubic-bezier(.45,.05,.55,.95) backwards}
+[data-look="longread"] .is-writing .ink-word.ink-mark{animation:lr-write var(--ink-dur,.4s) var(--ink-delay,0s) cubic-bezier(.45,.05,.55,.95) backwards,lr-mark .5s var(--mark-delay,0s) ease-out both}
 .ink-nib{position:absolute;left:0;top:0;width:26px;height:26px;margin:-24px 0 0 -3px;pointer-events:none;opacity:0;z-index:2}
 .ink-nib svg{display:block;width:100%;height:100%}
 [data-look="longread"] .login-glass{background:var(--reactor)}
@@ -544,7 +545,7 @@
 [data-look="longread"] .login-glass{background:var(--reactor)}
 [data-look="longread"] .login-status{border-bottom:1px solid var(--rule);color:var(--phosphor);font:700 .6rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase}
 [data-look="longread"] .login-status [data-today]{font:italic 400 .95rem/1 var(--display);letter-spacing:0;text-transform:none}
-[data-look="longread"] .login-masthead{display:grid;justify-items:center;gap:.55rem;padding:clamp(1.2rem,3vw,2rem) 1rem clamp(1rem,2.5vw,1.6rem);border-bottom:3px double var(--rule);text-align:center;animation:lr-settle .7s ease-out both}
+[data-look="longread"] .login-masthead{display:grid;justify-items:center;gap:.55rem;padding:clamp(1.2rem,3vw,2rem) 1rem clamp(1rem,2.5vw,1.6rem);border-bottom:3px double var(--rule);text-align:center;animation:lr-settle .7s ease-out backwards}
 [data-look="longread"] .login-masthead strong{font:500 clamp(2.3rem,6.4vw,5rem)/1 var(--display);letter-spacing:-.035em;color:var(--phosphor)}
 [data-look="longread"] .login-masthead span{font:700 .6rem/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
 [data-look="longread"] .login-copy{width:min(1060px,100%);margin:auto;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(220px,.75fr);column-gap:clamp(2rem,6vw,5rem);align-items:start}
@@ -556,7 +557,7 @@
 [data-look="longread"] .login-actions{margin-top:1.8rem}
 [data-look="longread"] .login-button{min-width:160px;min-height:50px}
 [data-look="longread"] .login-button.authenticating{background:#fff;color:var(--accent)}
-[data-look="longread"] .login-contents{display:block;grid-column:2;grid-row:1/span 5;align-self:center;border-left:1px solid var(--rule);padding-left:clamp(1.2rem,3vw,2rem);animation:lr-settle .7s .35s ease-out both}
+[data-look="longread"] .login-contents{display:block;grid-column:2;grid-row:1/span 5;align-self:center;border-left:1px solid var(--rule);padding-left:clamp(1.2rem,3vw,2rem);animation:lr-settle .7s .35s ease-out backwards}
 [data-look="longread"] .login-contents>p{margin:0 0 .6rem;padding-bottom:.6rem;border-bottom:2px solid var(--rule);font:700 .62rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase}
 [data-look="longread"] .login-contents ol{list-style:none;margin:0;padding:0}
 [data-look="longread"] .login-contents li{display:flex;align-items:baseline;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--line)}

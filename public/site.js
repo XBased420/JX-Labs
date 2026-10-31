@@ -1460,7 +1460,14 @@
   const lookStatus = document.getElementById('look-status');
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   const phoneLayout = matchMedia('(max-width: 720px)');
-  window.addEventListener('resize', () => { if (!lookMenu.hidden) closeLookMenu({ refocus: false }); });
+  const lookSwitch = document.getElementById('look-switch');
+  // iPhone Safari fires "resize" whenever its toolbar shows or hides, so only a real width change closes the menu.
+  let lookMenuWidth = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth === lookMenuWidth) return;
+    lookMenuWidth = window.innerWidth;
+    if (!lookMenu.hidden) closeLookMenu({ refocus: false });
+  });
   const applyLook = (next, { remember = false, animate = false } = {}) => {
     if (!looks.includes(next)) next = 'terminal';
     const changed = next !== look;
@@ -1491,11 +1498,22 @@
   const closeLookMenu = ({ refocus = true } = {}) => {
     if (lookMenu.hidden) return;
     lookMenu.hidden = true;
+    if (lookMenu.classList.contains('look-menu-floating')) {
+      lookMenu.classList.remove('look-menu-floating');
+      lookSwitch.insertBefore(lookMenu, lookStatus);
+    }
     lookButton.setAttribute('aria-expanded', 'false');
     if (refocus) lookButton.focus({ preventScroll: true });
   };
   const openLookMenu = (focusLast = false) => {
-    if (phoneLayout.matches) lookMenu.style.setProperty('--look-menu-top', `${Math.round(lookButton.getBoundingClientRect().bottom + 6)}px`);
+    if (phoneLayout.matches) {
+      // On phones the menu sits inside the sideways-scrolling section strip, which iPhone Safari clips.
+      // While open, it floats from <body> instead, directly under the button.
+      lookMenu.style.setProperty('--look-menu-top', `${Math.round(lookButton.getBoundingClientRect().bottom + 6)}px`);
+      lookMenu.classList.add('look-menu-floating');
+      document.body.append(lookMenu);
+    }
+    lookMenuWidth = window.innerWidth;
     lookMenu.hidden = false;
     lookButton.setAttribute('aria-expanded', 'true');
     const checked = lookOptions.find(item => item.getAttribute('aria-checked') === 'true');
@@ -1523,7 +1541,7 @@
     closeLookMenu();
   }));
   document.addEventListener('click', event => {
-    if (!lookMenu.hidden && !event.target.closest('#look-switch')) closeLookMenu({ refocus: false });
+    if (!lookMenu.hidden && !event.target.closest('#look-switch, #look-menu')) closeLookMenu({ refocus: false });
   });
   applyLook(look);
   const loginTitle = document.getElementById('login-title');

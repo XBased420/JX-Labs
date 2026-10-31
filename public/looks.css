@@ -52,8 +52,7 @@
   .directory{backdrop-filter:none}
   .directory .look-switch{position:sticky;right:0;z-index:2;flex:none;margin:0 0 0 auto;padding-left:.45rem;background:inherit;box-shadow:-12px 0 10px -8px #0008}
   .directory .look-button{display:flex;width:auto;min-height:44px;padding:.5rem .7rem;gap:.45rem}
-  .directory .look-menu,.look-menu.look-menu-floating{position:fixed;left:auto;right:.75rem;top:var(--look-menu-top,7rem);width:min(280px,calc(100vw - 1.5rem))}
-  .look-menu.look-menu-floating{z-index:1000;max-height:calc(100dvh - var(--look-menu-top,7rem) - .75rem);overflow-y:auto;overscroll-behavior:contain}
+  .directory .look-menu{position:fixed;left:auto;right:.75rem;top:var(--look-menu-top,7rem);width:min(280px,calc(100vw - 1.5rem))}
 }
 
 /* ------------------------------------------------------------------ shared resets for every non-terminal look */
@@ -637,4 +636,18 @@
   .look-alt.js .terminal-app [data-boot]{opacity:1!important;transform:none!important;filter:none!important}
   .ink-nib{display:none}
   [data-look="poster"] .project:nth-child(n),[data-look="poster"] .look-sticker{transform:none!important}
+}
+
+/* ------------------------------------------------------------------ phone tab bar + More sheet, per look */
+@media(max-width:720px){
+  [data-look="blueprint"].js{--nav-bg:#fff;--nav-accent:var(--accent);--nav-on-accent:#fff;--nav-font:var(--sans);--nav-line:1px solid var(--line);--nav-radius:12px;--nav-shadow:0 -8px 28px #0e1a2b1f}
+  [data-look="longread"].js{--nav-bg:var(--reactor);--nav-accent:var(--accent);--nav-on-accent:#fff;--nav-font:var(--sans);--nav-line:1px solid var(--rule);--nav-radius:0;--nav-shadow:0 -1px 0 var(--rule)}
+  [data-look="poster"].js{--nav-bg:#fff;--nav-fg:#111;--nav-dim:#3a372c;--nav-accent:var(--pink);--nav-on-accent:#111;--nav-font:var(--sans);--nav-line:3px solid #111;--nav-radius:12px;--nav-shadow:0 -4px 0 #111}
+  [data-look="poster"] .tabbar{border-radius:0}
+  [data-look="poster"] .phone-cta,[data-look="poster"] .sheet-cta{box-shadow:3px 3px 0 #111}
+  [data-look="poster"] .tabbar .active svg{color:#111}
+  [data-look="poster"] .tabbar .active span{box-shadow:0 3px 0 var(--pink)}
+  [data-look="longread"] .sheet-head h2,[data-look="longread"] .sheet-links a{font-family:var(--display);text-transform:none;letter-spacing:0}
+  [data-look="longread"] .sheet-head h2{font-size:1.25rem;font-weight:500}
+  [data-look="longread"] .sheet-links a{font-size:1.2rem;font-weight:500}
 }

@@ -14,7 +14,7 @@
   const main = document.getElementById('main');
   const soundToggle = document.getElementById('sound-toggle');
   const terminalViews = [...document.querySelectorAll('.terminal-view')];
-  const directoryLinks = [...document.querySelectorAll('.directory a[href^="#"]')];
+  const directoryLinks = [...document.querySelectorAll('.directory a[href^="#"], .tabbar a[href^="#"]')];
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   let audioContext;
   let soundEnabled = true;
@@ -359,6 +359,7 @@
       if (current) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     });
+    document.getElementById('more-button')?.classList.toggle('active', ['process', 'about'].includes(target.id));
     const activeLink = directoryLinks.find(link => link.classList.contains('active'));
     const directory = activeLink?.parentElement;
     if (directory && directory.scrollWidth > directory.clientWidth) {
@@ -1241,7 +1242,7 @@
     if (!terminalViews.some(view => view.id === id)) return;
     event.preventDefault();
     activateView(id);
-    if (id === 'concepts' && link.closest('.directory')) showConceptCatalog();
+    if (id === 'concepts' && link.closest('.directory, .tabbar')) showConceptCatalog();
   });
   window.addEventListener('popstate', () => {
     if (document.body.classList.contains('terminal-locked')) return;
@@ -1459,8 +1460,8 @@
   const lookCurrent = document.getElementById('look-current');
   const lookStatus = document.getElementById('look-status');
   const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const lookChips = [...document.querySelectorAll('[data-look-chip]')];
   const phoneLayout = matchMedia('(max-width: 720px)');
-  const lookSwitch = document.getElementById('look-switch');
   // iPhone Safari fires "resize" whenever its toolbar shows or hides, so only a real width change closes the menu.
   let lookMenuWidth = window.innerWidth;
   window.addEventListener('resize', () => {
@@ -1476,6 +1477,7 @@
     root.classList.toggle('look-alt', next !== 'terminal');
     const option = lookOptions.find(item => item.dataset.lookOption === next);
     lookOptions.forEach(item => item.setAttribute('aria-checked', String(item === option)));
+    lookChips.forEach(chip => chip.setAttribute('aria-pressed', String(chip.dataset.lookChip === next)));
     const name = option.querySelector('span').textContent;
     lookCurrent.textContent = name;
     themeMeta?.setAttribute('content', option.dataset.themeColor);
@@ -1498,21 +1500,11 @@
   const closeLookMenu = ({ refocus = true } = {}) => {
     if (lookMenu.hidden) return;
     lookMenu.hidden = true;
-    if (lookMenu.classList.contains('look-menu-floating')) {
-      lookMenu.classList.remove('look-menu-floating');
-      lookSwitch.insertBefore(lookMenu, lookStatus);
-    }
     lookButton.setAttribute('aria-expanded', 'false');
     if (refocus) lookButton.focus({ preventScroll: true });
   };
   const openLookMenu = (focusLast = false) => {
-    if (phoneLayout.matches) {
-      // On phones the menu sits inside the sideways-scrolling section strip, which iPhone Safari clips.
-      // While open, it floats from <body> instead, directly under the button.
-      lookMenu.style.setProperty('--look-menu-top', `${Math.round(lookButton.getBoundingClientRect().bottom + 6)}px`);
-      lookMenu.classList.add('look-menu-floating');
-      document.body.append(lookMenu);
-    }
+    if (phoneLayout.matches) lookMenu.style.setProperty('--look-menu-top', `${Math.round(lookButton.getBoundingClientRect().bottom + 6)}px`);
     lookMenuWidth = window.innerWidth;
     lookMenu.hidden = false;
     lookButton.setAttribute('aria-expanded', 'true');
@@ -1541,8 +1533,56 @@
     closeLookMenu();
   }));
   document.addEventListener('click', event => {
-    if (!lookMenu.hidden && !event.target.closest('#look-switch, #look-menu')) closeLookMenu({ refocus: false });
+    if (!lookMenu.hidden && !event.target.closest('#look-switch')) closeLookMenu({ refocus: false });
   });
+  // Phones: "More" sheet from the bottom tab bar. Holds the remaining sections, the look chips, and sound.
+  const moreButton = document.getElementById('more-button');
+  const moreSheet = document.getElementById('more-sheet');
+  const sheetScrim = document.getElementById('sheet-scrim');
+  const sheetSound = document.getElementById('sheet-sound');
+  const sheetBackground = [document.querySelector('.terminal-app'), document.getElementById('tabbar')].filter(Boolean);
+  let sheetTimer = 0;
+  const syncSheetSound = () => {
+    sheetSound.textContent = soundToggle.disabled ? 'Unavailable' : soundEnabled ? 'On' : 'Off';
+    sheetSound.setAttribute('aria-pressed', String(soundEnabled));
+    sheetSound.disabled = soundToggle.disabled;
+  };
+  const openMoreSheet = () => {
+    clearTimeout(sheetTimer);
+    moreSheet.hidden = false;
+    sheetScrim.hidden = false;
+    moreSheet.scrollTop = 0;
+    sheetBackground.forEach(element => { element.inert = true; });
+    moreButton.setAttribute('aria-expanded', 'true');
+    syncSheetSound();
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add('sheet-open')));
+    (moreSheet.querySelector('[aria-current="page"]') || moreSheet.querySelector('.sheet-links a')).focus({ preventScroll: true });
+  };
+  const closeMoreSheet = ({ refocus = true } = {}) => {
+    if (moreSheet.hidden) return;
+    root.classList.remove('sheet-open');
+    sheetBackground.forEach(element => { element.inert = false; });
+    moreButton.setAttribute('aria-expanded', 'false');
+    sheetTimer = setTimeout(() => { moreSheet.hidden = true; sheetScrim.hidden = true; }, motion.matches ? 0 : 280);
+    if (refocus) moreButton.focus({ preventScroll: true });
+  };
+  moreButton.addEventListener('click', () => (moreSheet.hidden ? openMoreSheet() : closeMoreSheet()));
+  document.getElementById('more-close').addEventListener('click', () => closeMoreSheet());
+  sheetScrim.addEventListener('click', () => closeMoreSheet());
+  moreSheet.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); closeMoreSheet(); return; }
+    if (event.key !== 'Tab') return;
+    const focusable = [...moreSheet.querySelectorAll('a[href], button:not(:disabled)')];
+    const first = focusable[0], last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+  // Section links close the sheet; the shared link handler then opens the section.
+  moreSheet.addEventListener('click', event => { if (event.target.closest('a[href^="#"]')) closeMoreSheet({ refocus: false }); });
+  lookChips.forEach(chip => chip.addEventListener('click', () => applyLook(chip.dataset.lookChip, { remember: true, animate: true })));
+  sheetSound.addEventListener('click', () => { soundToggle.click(); syncSheetSound(); });
+  phoneLayout.addEventListener('change', event => { if (!event.matches) closeMoreSheet({ refocus: false }); });
+  syncSheetSound();
   applyLook(look);
   const loginTitle = document.getElementById('login-title');
   if (look === 'longread' && !motion.matches && !login.hidden) writeHeading(loginTitle, 380, { silent: true });

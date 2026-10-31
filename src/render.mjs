@@ -19,6 +19,27 @@ export const looks = [
   { id: 'poster', name: 'Poster', note: 'Bold and loud', theme: '#ffd43a' }
 ];
 const lookBoot = `(function(d){d.classList.add('js');var t=${JSON.stringify(Object.fromEntries(looks.map(look => [look.id, look.theme])))},ids=${JSON.stringify(looks.map(look => look.id))},last=null;try{last=localStorage.getItem('jx-look-last');localStorage.removeItem('jx-look')}catch(e){}var pool=ids.filter(function(id){return id!==last}),l=pool[Math.floor(Math.random()*pool.length)]||'terminal';try{localStorage.setItem('jx-look-last',l)}catch(e){}d.setAttribute('data-look',l);if(l!=='terminal')d.classList.add('look-alt');var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t[l])})(document.documentElement)`;
+const tabIcons = {
+  home: '<path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/>',
+  work: '<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M3.5 9.5h17"/>',
+  concepts: '<path d="M12 3 21 8v8l-9 5-9-5V8z"/><path d="M12 12 21 8M12 12v9M12 12 3 8"/>',
+  services: '<path d="M12 3v18M16.5 7.5c-.8-1.4-2.4-2-4.5-2-2.7 0-4.3 1.3-4.3 3.1 0 4.4 9 2.3 9 6.9 0 1.9-1.8 3.2-4.7 3.2-2.3 0-4-.8-4.8-2.4"/>',
+  more: '<path d="M4 7h16M4 12h16M4 17h16"/>'
+};
+const tabIcon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${tabIcons[name]}</svg>`;
+// Phones only: a bottom tab bar for the main sections, plus a "More" sheet for the rest, looks, and sound.
+const phoneNav = () => `<nav class="tabbar" id="tabbar" aria-label="Sections">${[['home', 'Home'], ['work', 'Portfolio'], ['concepts', 'Concepts'], ['services', 'Estimate']].map(([id, label]) => `<a href="#${id}">${tabIcon(id)}<span>${label}</span></a>`).join('')}<button class="tabbar-more" id="more-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="more-sheet">${tabIcon('more')}<span>More</span></button></nav>
+    <div class="sheet-scrim" id="sheet-scrim" hidden></div>
+    <section class="more-sheet" id="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-title" hidden data-lenis-prevent>
+      <div class="sheet-grab" aria-hidden="true"></div>
+      <div class="sheet-head"><h2 id="more-title">More</h2><button class="sheet-close" id="more-close" type="button" aria-label="Close menu">×</button></div>
+      <nav class="sheet-links" aria-label="More sections"><a href="#process">How It Works</a><a href="#about">About JX Labs</a></nav>
+      <p class="sheet-label" id="sheet-look-label">Try another look</p>
+      <div class="look-chips" role="group" aria-labelledby="sheet-look-label">${looks.map(look => `<button type="button" aria-pressed="${look.id === 'terminal'}" data-look-chip="${look.id}"><i class="look-swatch look-swatch-${look.id}" aria-hidden="true"></i><span>${escape(look.name)}</span></button>`).join('')}</div>
+      <p class="sheet-label">Settings</p>
+      <div class="sheet-row"><span id="sheet-sound-label">Sound effects</span><button class="sheet-sound" id="sheet-sound" type="button" aria-pressed="true" aria-labelledby="sheet-sound-label">On</button></div>
+      <a class="sheet-cta" href="#booking">Start a project</a>
+    </section>`;
 const lookSwitch = () => `<div class="look-switch" id="look-switch"><button class="look-button" id="look-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="look-menu"><span class="look-label">Try another look</span><span class="look-current" id="look-current">Terminal</span><span class="look-caret" aria-hidden="true"></span></button><div class="look-menu" id="look-menu" role="menu" aria-labelledby="look-button" hidden>${looks.map(look => `<button type="button" role="menuitemradio" aria-checked="${look.id === 'terminal'}" tabindex="-1" data-look-option="${look.id}" data-theme-color="${look.theme}"><i class="look-swatch look-swatch-${look.id}" aria-hidden="true"></i><span>${escape(look.name)}</span><small>${escape(look.note)}</small></button>`).join('')}</div><span class="visually-hidden" id="look-status" role="status"></span></div>`;
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
@@ -93,7 +114,7 @@ export function renderPage({ settings, site, base = '/' }) {
             <a class="wordmark" href="#home" aria-label="JX Labs home">JX Labs</a>
             <span class="system-title">JX LABS PUBLIC SERVICE TERMINAL</span>
             <span class="status"><i></i> AVAILABLE FOR NEW WORK</span>
-            <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="true">SOUND: ON</button>
+            <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="true">SOUND: ON</button><a class="phone-cta" href="#booking">Start a project</a>
             <span class="clock" id="terminal-clock" aria-hidden="true">00:00:00</span>
             <div class="look-marquee" aria-hidden="true"><div>${[0, 1].map(() => services.map(([name]) => `<span>${escape(name)}</span><i>★</i>`).join('')).join('')}</div></div>
           </header>
@@ -216,6 +237,7 @@ export function renderPage({ settings, site, base = '/' }) {
         <div class="hardware-row" aria-hidden="true" data-boot><span>POWER</span><i></i><span>DATA</span><i></i><b>PROPERTY OF JX LABS</b></div>
       </div>
     </div>
+    ${phoneNav()}
     <script type="application/json" id="site-config">${config}</script>${motionLibraries.map(path => `<script defer src="${asset(path)}"></script>`).join('')}<script defer src="${asset(`motion.js?v=${motionScriptVersion}`)}"></script><script defer src="${asset(`site.js?v=${scriptVersion}`)}"></script>
   </body></html>`;
 }

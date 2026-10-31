@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import settings, { deployment } from '../site.config.mjs';
-import { renderPage } from '../src/render.mjs';
+import { renderPage, looks } from '../src/render.mjs';
 test('stylesheet URL changes with the stylesheet contents', () => {
   const html = renderPage({ settings, site: 'https://xbased420.github.io', base: '/test-repo/' });
   const version = createHash('sha256').update(readFileSync(new URL('../public/styles.css', import.meta.url))).digest('hex').slice(0, 12);
@@ -302,3 +302,15 @@ test('Payday AJ has one contained live preview and a direct official-site fallba
   assert.doesNotMatch(html, /xbased420\.github\.io\/PaydayAj/);
 });
 
+test('phone tab bar and More sheet reach every section, look, and the request form', () => {
+  const html = renderPage({ settings, ...deployment(settings) });
+  const views = [...html.matchAll(/<section id="([a-z]+)" class="[^"]*terminal-view/g)].map(match => match[1]);
+  const tabbar = html.match(/<nav class="tabbar"[\s\S]*?<\/nav>/)[0];
+  const sheet = html.match(/<section class="more-sheet"[\s\S]*?<\/section>/)[0];
+  const targets = [...`${tabbar}${sheet}`.matchAll(/href="#([a-z]+)"/g)].map(match => match[1]);
+  assert.deepEqual([...new Set(targets)].sort(), [...views].sort());
+  assert.match(tabbar, /id="more-button"[^>]*aria-controls="more-sheet"/);
+  assert.match(sheet, /role="dialog" aria-modal="true"/);
+  assert.equal((sheet.match(/data-look-chip="/g) || []).length, looks.length);
+  assert.match(html, /<a class="phone-cta" href="#booking">Start a project<\/a>/);
+});
